@@ -42,6 +42,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pstryk Energy from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Register panel early (before API calls) so it's available even if API fails
+    enable_panel = entry.options.get(CONF_ENABLE_PANEL, True)
+
+    if enable_panel and "panel_registered" not in hass.data[DOMAIN]:
+        if "static_path_registered" not in hass.data[DOMAIN]:
+            panel_path = Path(__file__).parent / "frontend"
+            await hass.http.async_register_static_paths([
+                StaticPathConfig("/pstryk_panel", str(panel_path), cache_headers=True)
+            ])
+            hass.data[DOMAIN]["static_path_registered"] = True
+        hass.components.frontend.async_register_panel(
+            component_name="custom",
+            sidebar_title=PANEL_TITLE,
+            sidebar_icon=PANEL_ICON,
+            frontend_url_path=PANEL_URL,
+            config={
+                "_panel_custom": {
+                    "name": "pstryk-panel",
+                    "module_url": "/pstryk_panel/pstryk-panel.js",
+                }
+            },
+            require_admin=False,
+        )
+        hass.data[DOMAIN]["panel_registered"] = True
+    elif not enable_panel and "panel_registered" in hass.data[DOMAIN]:
+        hass.components.frontend.async_remove_panel(PANEL_URL)
+        hass.data[DOMAIN].pop("panel_registered", None)
+
     # Throttle: don't retry setup more often than every 15 min
     last_fail = hass.data[DOMAIN].get("last_setup_fail")
     if last_fail and datetime.now(timezone.utc) - last_fail < SETUP_RETRY_INTERVAL:
@@ -95,34 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register/unregister panel based on option
-    enable_panel = entry.options.get(CONF_ENABLE_PANEL, True)
-
-    if enable_panel and "panel_registered" not in hass.data[DOMAIN]:
-        if "static_path_registered" not in hass.data[DOMAIN]:
-            panel_path = Path(__file__).parent / "frontend"
-            await hass.http.async_register_static_paths([
-                StaticPathConfig("/pstryk_panel", str(panel_path), cache_headers=True)
-            ])
-            hass.data[DOMAIN]["static_path_registered"] = True
-        hass.components.frontend.async_register_panel(
-            component_name="custom",
-            sidebar_title=PANEL_TITLE,
-            sidebar_icon=PANEL_ICON,
-            frontend_url_path=PANEL_URL,
-            config={
-                "_panel_custom": {
-                    "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js",
-                }
-            },
-            require_admin=False,
-        )
-        hass.data[DOMAIN]["panel_registered"] = True
-    elif not enable_panel and "panel_registered" in hass.data[DOMAIN]:
-        hass.components.frontend.async_remove_panel(PANEL_URL)
-        hass.data[DOMAIN].pop("panel_registered", None)
 
     # Listen for options updates
     entry.async_on_unload(entry.add_update_listener(async_update_options))
