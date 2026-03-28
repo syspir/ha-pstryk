@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0] - 2026-03-28
+
+### Zmienione
+- Redukcja zapytań API z 3 do 2 na cykl odświeżania (dane dzienne z summary hourly)
+- Minimalny interwał odświeżania zmieniony z 5 na 15 minut
+
+### Naprawione
+- Obsługa rate limitingu API (429) z automatycznym retry
+- Rejestracja ścieżki statycznej panelu (kompatybilność z nowszymi HA)
+- Sensory kosztowe: state_class TOTAL zamiast TOTAL_INCREASING (wymagane dla MONETARY)
+
+### Usunięte
+- Sensory śladu węglowego (CO2) — redukcja obciążenia API
+
 ## [0.3.1] - 2026-03-28
 
 ### Naprawione
