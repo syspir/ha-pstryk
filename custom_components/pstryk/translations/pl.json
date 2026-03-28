@@ -9,20 +9,23 @@
           "is_prosumer": "Jestem prosumentem (fotowoltaika)",
           "enable_panel": "Włącz panel w menu bocznym",
           "timezone": "Strefa czasowa",
-          "scan_interval": "Interwał odświeżania (minuty)"
+          "scan_interval": "Interwał odświeżania (minuty)",
+          "blebox_ip": "Adres IP licznika BleBox"
         },
         "data_description": {
           "api_token": "Token autoryzacyjny z panelu Pstryk (format: sk-...)",
           "is_prosumer": "Zaznacz jeśli posiadasz instalację fotowoltaiczną i oddajesz energię do sieci",
           "enable_panel": "Wyświetla dedykowany panel Pstryk Energy w menu bocznym Home Assistant",
           "timezone": "Strefa czasowa do agregacji danych",
-          "scan_interval": "Jak często pobierać dane (domyślnie co 15 minut)"
+          "scan_interval": "Jak często pobierać dane (domyślnie co 15 minut)",
+          "blebox_ip": "Adres IP licznika BleBox w sieci lokalnej (opcjonalnie, np. 192.168.0.48)"
         }
       }
     },
     "error": {
       "cannot_connect": "Nie można połączyć się z API Pstryk",
       "invalid_auth": "Nieprawidłowy token API",
+      "blebox_cannot_connect": "Nie można połączyć się z licznikiem BleBox pod podanym adresem IP",
       "unknown": "Wystąpił nieoczekiwany błąd"
     },
     "abort": {
@@ -36,7 +39,8 @@
         "data": {
           "scan_interval": "Interwał odświeżania (minuty)",
           "is_prosumer": "Jestem prosumentem (fotowoltaika)",
-          "enable_panel": "Włącz panel w menu bocznym"
+          "enable_panel": "Włącz panel w menu bocznym",
+          "blebox_ip": "Adres IP licznika BleBox"
         }
       }
     }

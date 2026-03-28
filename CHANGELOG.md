@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0] - 2026-03-29
+
+### Dodane
+- Obsługa lokalnego licznika BleBox — odczyt danych co 5 sekund przez API lokalne (http://IP/state)
+- Sensory BleBox: moc czynna (suma + L1/L2/L3), napięcie (L1/L2/L3), prąd (L1/L2/L3), częstotliwość sieci, energia pobrana/oddana z rejestrów licznika
+- Sensory tg φ QI i QIV w 4 okresach: chwilowe (z mocy), miesięczne, roczne i całościowe (z rejestrów energii)
+- Konfiguracja adresu IP licznika BleBox w config flow i options flow z walidacją połączenia
+- Osobne urządzenie "Pstryk Meter" (manufacturer: BleBox) powiązane z głównym urządzeniem Pstryk Energy
+- Trwała pamięć danych sensorów — po restarcie HA sensory mają od razu ostatnie znane wartości (Store dla metrics, pricing i tg φ BleBox)
+
+### Zmienione
+- Koordynatory metrics i pricing zapisują dane do .storage/ po każdym udanym pobraniu z API
+- Koordynator BleBox zapisuje snapshoty rejestrów energii dla tg φ przy zmianie miesiąca/roku
+- Graceful degradation — jeśli licznik BleBox jest niedostępny, integracja działa dalej z API chmurowym
+
 ## [0.5.3] - 2026-03-29
 
 ### Zmienione

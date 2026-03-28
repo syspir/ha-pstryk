@@ -18,8 +18,10 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import PstrykApiClient, PstrykAuthError, PstrykConnectionError
+from .blebox import PstrykBleBoxClient
 from .const import (
     CONF_API_TOKEN,
+    CONF_BLEBOX_IP,
     CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
@@ -62,20 +64,34 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not valid:
                     errors["base"] = "invalid_auth"
                 else:
-                    return self.async_create_entry(
-                        title=DEFAULT_NAME,
-                        data={
+                    # Validate BleBox IP if provided
+                    blebox_ip = user_input.get(CONF_BLEBOX_IP, "").strip()
+                    if blebox_ip:
+                        blebox_client = PstrykBleBoxClient(
+                            session=session, host=blebox_ip
+                        )
+                        if not await blebox_client.validate_connection():
+                            errors["base"] = "blebox_cannot_connect"
+
+                    if not errors:
+                        entry_data = {
                             CONF_API_TOKEN: user_input[CONF_API_TOKEN],
                             CONF_TIMEZONE: user_input.get(CONF_TIMEZONE, DEFAULT_TIMEZONE),
-                        },
-                        options={
-                            CONF_IS_PROSUMER: user_input.get(CONF_IS_PROSUMER, False),
-                            CONF_ENABLE_PANEL: user_input.get(CONF_ENABLE_PANEL, True),
-                            CONF_SCAN_INTERVAL_MINUTES: user_input.get(
-                                CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
-                            ),
-                        },
-                    )
+                        }
+                        if blebox_ip:
+                            entry_data[CONF_BLEBOX_IP] = blebox_ip
+
+                        return self.async_create_entry(
+                            title=DEFAULT_NAME,
+                            data=entry_data,
+                            options={
+                                CONF_IS_PROSUMER: user_input.get(CONF_IS_PROSUMER, False),
+                                CONF_ENABLE_PANEL: user_input.get(CONF_ENABLE_PANEL, True),
+                                CONF_SCAN_INTERVAL_MINUTES: user_input.get(
+                                    CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
+                                ),
+                            },
+                        )
             except PstrykConnectionError:
                 errors["base"] = "cannot_connect"
             except PstrykAuthError:
@@ -95,6 +111,7 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_SCAN_INTERVAL_MINUTES, default=DEFAULT_SCAN_INTERVAL
                     ): vol.All(vol.Coerce(int), vol.Range(min=30, max=120)),
+                    vol.Optional(CONF_BLEBOX_IP, default=""): str,
                 }
             ),
             errors=errors,
@@ -118,8 +135,26 @@ class PstrykOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            blebox_ip = user_input.get(CONF_BLEBOX_IP, "").strip()
+            if blebox_ip:
+                session = async_get_clientsession(self.hass)
+                blebox_client = PstrykBleBoxClient(
+                    session=session, host=blebox_ip
+                )
+                if not await blebox_client.validate_connection():
+                    errors["base"] = "blebox_cannot_connect"
+
+            if not errors:
+                user_input[CONF_BLEBOX_IP] = blebox_ip
+                return self.async_create_entry(title="", data=user_input)
+
+        current_blebox_ip = (
+            self.config_entry.options.get(CONF_BLEBOX_IP)
+            or self.config_entry.data.get(CONF_BLEBOX_IP, "")
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -139,6 +174,11 @@ class PstrykOptionsFlow(OptionsFlow):
                             CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=30, max=120)),
+                    vol.Optional(
+                        CONF_BLEBOX_IP,
+                        default=current_blebox_ip,
+                    ): str,
                 }
             ),
+            errors=errors,
         )

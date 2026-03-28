@@ -9,20 +9,23 @@
           "is_prosumer": "I am a prosumer (solar panels)",
           "enable_panel": "Enable sidebar panel",
           "timezone": "Timezone",
-          "scan_interval": "Update interval (minutes)"
+          "scan_interval": "Update interval (minutes)",
+          "blebox_ip": "BleBox meter IP address"
         },
         "data_description": {
           "api_token": "Authorization token from Pstryk panel (format: sk-...)",
           "is_prosumer": "Check if you have a solar installation and feed energy to the grid",
           "enable_panel": "Show a dedicated Pstryk Energy panel in the Home Assistant sidebar",
           "timezone": "Timezone for data aggregation",
-          "scan_interval": "How often to fetch data (default: every 15 minutes)"
+          "scan_interval": "How often to fetch data (default: every 15 minutes)",
+          "blebox_ip": "Local IP address of the BleBox smart meter (optional, e.g. 192.168.0.48)"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to Pstryk API",
       "invalid_auth": "Invalid API token",
+      "blebox_cannot_connect": "Cannot connect to BleBox meter at the given IP address",
       "unknown": "Unexpected error"
     },
     "abort": {
@@ -36,7 +39,8 @@
         "data": {
           "scan_interval": "Update interval (minutes)",
           "is_prosumer": "I am a prosumer (solar panels)",
-          "enable_panel": "Enable sidebar panel"
+          "enable_panel": "Enable sidebar panel",
+          "blebox_ip": "BleBox meter IP address"
         }
       }
     }

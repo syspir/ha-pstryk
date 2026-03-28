@@ -10,12 +10,17 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import PstrykApiClient, PstrykApiError, PstrykAuthError
+from .blebox import PstrykBleBoxClient, PstrykBleBoxError
 from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+_STORE_VERSION = 1
 
 
 class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -27,6 +32,7 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         client: PstrykApiClient,
         update_interval: timedelta,
         timezone: str,
+        entry_id: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -38,6 +44,14 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         self.timezone = timezone
         self.attribution = ATTRIBUTION
+        self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_metrics_{entry_id}")
+
+    async def async_load_stored_data(self) -> None:
+        """Load last known data from persistent storage."""
+        stored = await self._store.async_load()
+        if stored:
+            self.async_set_updated_data(stored)
+            _LOGGER.debug("Restored metrics data from storage")
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch metrics data from API (2 requests: hourly + monthly)."""
@@ -55,13 +69,15 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if current_frame is None:
                     current_frame = hourly["frames"][-1]
 
-            return {
+            result = {
                 "hourly": hourly,
                 "monthly": monthly,
                 "current_frame": current_frame,
                 "daily_summary": hourly.get("summary", {}),
                 "monthly_summary": monthly.get("summary", {}),
             }
+            await self._store.async_save(result)
+            return result
         except PstrykAuthError as err:
             raise UpdateFailed(f"Authentication error: {err}") from err
         except PstrykApiError as err:
@@ -80,6 +96,7 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         client: PstrykApiClient,
         update_interval: timedelta,
         is_prosumer: bool = False,
+        entry_id: str = "",
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -93,6 +110,17 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.attribution = ATTRIBUTION
         self._raw_pricing: dict[str, Any] | None = None
         self._raw_prosumer: dict[str, Any] | None = None
+        self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_pricing_{entry_id}")
+
+    async def async_load_stored_data(self) -> None:
+        """Load last known raw pricing data from persistent storage."""
+        stored = await self._store.async_load()
+        if stored:
+            self._raw_pricing = stored.get("raw_pricing")
+            self._raw_prosumer = stored.get("raw_prosumer")
+            if self._raw_pricing:
+                self.async_set_updated_data(self._process_data())
+                _LOGGER.debug("Restored pricing data from storage")
 
     def _find_current_frame(self, frames: list[dict]) -> dict | None:
         """Find the frame matching current time based on start/end."""
@@ -175,7 +203,12 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._raw_pricing = await self.client.get_current_pricing()
             if self.is_prosumer:
                 self._raw_prosumer = await self.client.get_current_prosumer_pricing()
-            return self._process_data()
+            result = self._process_data()
+            await self._store.async_save({
+                "raw_pricing": self._raw_pricing,
+                "raw_prosumer": self._raw_prosumer,
+            })
+            return result
         except PstrykAuthError as err:
             raise UpdateFailed(f"Authentication error: {err}") from err
         except PstrykApiError as err:
@@ -188,3 +221,154 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Recalculate current price from stored frames (no API call)."""
         if self._raw_pricing:
             self.async_set_updated_data(self._process_data())
+
+
+class PstrykBleBoxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator for local BleBox meter data (every 5s)."""
+
+    # Energy register keys used for tg φ calculation
+    _ENERGY_KEYS = ("forwardActiveEnergy", "forwardReactiveEnergy", "reverseReactiveEnergy")
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: PstrykBleBoxClient,
+        update_interval: timedelta,
+        entry_id: str,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_blebox",
+            update_interval=update_interval,
+        )
+        self.client = client
+        self.attribution = ATTRIBUTION
+        self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_blebox_{entry_id}")
+        # Period start register snapshots for tg φ
+        self._month_start: dict[str, float] | None = None
+        self._month_start_month: int | None = None
+        self._year_start: dict[str, float] | None = None
+        self._year_start_year: int | None = None
+
+    async def async_load_periods(self) -> None:
+        """Load period start snapshots from persistent storage."""
+        data = await self._store.async_load()
+        if not data:
+            return
+        self._month_start = data.get("month_start")
+        self._month_start_month = data.get("month_start_month")
+        self._year_start = data.get("year_start")
+        self._year_start_year = data.get("year_start_year")
+        _LOGGER.debug("Loaded BleBox tg φ period data from storage")
+
+    async def _async_save_periods(self) -> None:
+        """Save period start snapshots to persistent storage."""
+        await self._store.async_save({
+            "month_start": self._month_start,
+            "month_start_month": self._month_start_month,
+            "year_start": self._year_start,
+            "year_start_year": self._year_start_year,
+        })
+
+    @staticmethod
+    def _calc_tg_phi(
+        start: dict[str, float], end: dict[str, float],
+    ) -> tuple[float | None, float | None]:
+        """Calculate tg φ QI and QIV from energy register deltas.
+
+        tg φ QI  = ΔEb_indukcyjna / ΔEa_pobrana
+        tg φ QIV = ΔEb_pojemnościowa / ΔEa_pobrana
+        """
+        delta_active = (
+            end.get("forwardActiveEnergy", 0)
+            - start.get("forwardActiveEnergy", 0)
+        )
+        if delta_active < 0.001:
+            return None, None
+        delta_qi = (
+            end.get("forwardReactiveEnergy", 0)
+            - start.get("forwardReactiveEnergy", 0)
+        )
+        delta_qiv = (
+            end.get("reverseReactiveEnergy", 0)
+            - start.get("reverseReactiveEnergy", 0)
+        )
+        return delta_qi / delta_active, delta_qiv / delta_active
+
+    def _snapshot(self, total: dict[str, float]) -> dict[str, float]:
+        """Take a snapshot of energy registers for period tracking."""
+        return {k: total.get(k, 0) for k in self._ENERGY_KEYS}
+
+    async def _build_tg_phi(self, total: dict[str, float]) -> dict[str, float | None]:
+        """Calculate tg φ for all periods."""
+        now = datetime.now()
+        tg_phi: dict[str, float | None] = {}
+        save_needed = False
+
+        # 1 minute — instantaneous from power (reactivePower / activePower)
+        active_p = total.get("activePower", 0)
+        if active_p > 0:
+            reactive_p = total.get("reactivePower", 0)
+            tg_phi["minute_qi"] = max(0.0, reactive_p) / active_p
+            tg_phi["minute_qiv"] = max(0.0, -reactive_p) / active_p
+        else:
+            tg_phi["minute_qi"] = None
+            tg_phi["minute_qiv"] = None
+
+        # Month — energy delta from start of month
+        if self._month_start_month != now.month:
+            self._month_start = self._snapshot(total)
+            self._month_start_month = now.month
+            save_needed = True
+        if self._month_start:
+            qi, qiv = self._calc_tg_phi(self._month_start, total)
+            tg_phi["month_qi"] = qi
+            tg_phi["month_qiv"] = qiv
+        else:
+            tg_phi["month_qi"] = None
+            tg_phi["month_qiv"] = None
+
+        # Year — energy delta from start of year
+        if self._year_start_year != now.year:
+            self._year_start = self._snapshot(total)
+            self._year_start_year = now.year
+            save_needed = True
+        if self._year_start:
+            qi, qiv = self._calc_tg_phi(self._year_start, total)
+            tg_phi["year_qi"] = qi
+            tg_phi["year_qiv"] = qiv
+        else:
+            tg_phi["year_qi"] = None
+            tg_phi["year_qiv"] = None
+
+        # Total — all-time from meter registers
+        fae = total.get("forwardActiveEnergy", 0)
+        if fae > 0:
+            tg_phi["total_qi"] = total.get("forwardReactiveEnergy", 0) / fae
+            tg_phi["total_qiv"] = total.get("reverseReactiveEnergy", 0) / fae
+        else:
+            tg_phi["total_qi"] = None
+            tg_phi["total_qiv"] = None
+
+        if save_needed:
+            await self._async_save_periods()
+
+        return tg_phi
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch meter data from local BleBox API."""
+        try:
+            raw = await self.client.get_state()
+            phases = PstrykBleBoxClient.parse_sensors(raw)
+            total = phases.get(0, {})
+            return {
+                "phases": phases,
+                "tg_phi": await self._build_tg_phi(total),
+            }
+        except PstrykBleBoxError as err:
+            if self.data:
+                _LOGGER.warning("BleBox meter error, keeping last data: %s", err)
+                return self.data
+            raise UpdateFailed(f"BleBox meter error: {err}") from err

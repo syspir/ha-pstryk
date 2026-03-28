@@ -18,8 +18,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from .api import PstrykApiClient, PstrykApiError
+from .blebox import PstrykBleBoxClient
 from .const import (
     CONF_API_TOKEN,
+    CONF_BLEBOX_IP,
     CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
@@ -31,9 +33,14 @@ from .const import (
     PANEL_TITLE,
     PANEL_URL,
     PLATFORMS,
+    UPDATE_INTERVAL_BLEBOX,
     UPDATE_INTERVAL_PRICING,
 )
-from .coordinator import PstrykMetricsCoordinator, PstrykPricingCoordinator
+from .coordinator import (
+    PstrykBleBoxCoordinator,
+    PstrykMetricsCoordinator,
+    PstrykPricingCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client=client,
         update_interval=timedelta(minutes=scan_interval),
         timezone=tz,
+        entry_id=entry.entry_id,
     )
 
     pricing_coordinator = PstrykPricingCoordinator(
@@ -105,7 +113,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client=client,
         update_interval=UPDATE_INTERVAL_PRICING,
         is_prosumer=is_prosumer,
+        entry_id=entry.entry_id,
     )
+
+    # Restore last known data from storage (sensors available immediately)
+    await metrics_coordinator.async_load_stored_data()
+    await pricing_coordinator.async_load_stored_data()
 
     # Fetch initial data — on failure, retry no sooner than 15 min
     try:
@@ -119,10 +132,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN].pop("last_setup_fail", None)
 
+    # BleBox local meter (optional)
+    blebox_ip = entry.options.get(CONF_BLEBOX_IP) or entry.data.get(CONF_BLEBOX_IP)
+    blebox_coordinator = None
+
+    if blebox_ip:
+        blebox_client = PstrykBleBoxClient(session=session, host=blebox_ip)
+        blebox_coordinator = PstrykBleBoxCoordinator(
+            hass=hass,
+            client=blebox_client,
+            update_interval=UPDATE_INTERVAL_BLEBOX,
+            entry_id=entry.entry_id,
+        )
+        try:
+            await blebox_coordinator.async_load_periods()
+            await blebox_coordinator.async_config_entry_first_refresh()
+        except Exception:
+            _LOGGER.warning(
+                "BleBox meter at %s is not available, continuing without local data",
+                blebox_ip,
+            )
+            blebox_coordinator = None
+
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "metrics_coordinator": metrics_coordinator,
         "pricing_coordinator": pricing_coordinator,
+        "blebox_coordinator": blebox_coordinator,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

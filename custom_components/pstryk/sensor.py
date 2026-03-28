@@ -17,8 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfMass,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -26,7 +30,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_IS_PROSUMER, DOMAIN
-from .coordinator import PstrykMetricsCoordinator, PstrykPricingCoordinator
+from .coordinator import (
+    PstrykBleBoxCoordinator,
+    PstrykMetricsCoordinator,
+    PstrykPricingCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -316,6 +324,285 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
 )
 
 
+# ──────────── BleBox Local Meter Sensors ────────────
+
+
+def _blebox_phase(data: dict, phase: int, key: str) -> float | None:
+    """Get value from BleBox phase data."""
+    if isinstance(data, dict):
+        phases = data.get("phases")
+        if isinstance(phases, dict):
+            phase_data = phases.get(phase)
+            if isinstance(phase_data, dict):
+                return phase_data.get(key)
+    return None
+
+
+def _blebox_tg_phi(data: dict, key: str) -> float | None:
+    """Get tg φ value from BleBox coordinator data."""
+    if isinstance(data, dict):
+        tg_phi = data.get("tg_phi")
+        if isinstance(tg_phi, dict):
+            return tg_phi.get(key)
+    return None
+
+
+BLEBOX_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
+    # Total active power
+    PstrykSensorEntityDescription(
+        key="blebox_power",
+        translation_key="blebox_power",
+        name="Moc czynna",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:flash",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 0, "activePower"),
+    ),
+    # Per-phase active power
+    PstrykSensorEntityDescription(
+        key="blebox_power_l1",
+        translation_key="blebox_power_l1",
+        name="Moc czynna L1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:flash",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 1, "activePower"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_power_l2",
+        translation_key="blebox_power_l2",
+        name="Moc czynna L2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:flash",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 2, "activePower"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_power_l3",
+        translation_key="blebox_power_l3",
+        name="Moc czynna L3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:flash",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 3, "activePower"),
+    ),
+    # Per-phase voltage
+    PstrykSensorEntityDescription(
+        key="blebox_voltage_l1",
+        translation_key="blebox_voltage_l1",
+        name="Napięcie L1",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:sine-wave",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 1, "voltage"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_voltage_l2",
+        translation_key="blebox_voltage_l2",
+        name="Napięcie L2",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:sine-wave",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 2, "voltage"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_voltage_l3",
+        translation_key="blebox_voltage_l3",
+        name="Napięcie L3",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:sine-wave",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 3, "voltage"),
+    ),
+    # Per-phase current
+    PstrykSensorEntityDescription(
+        key="blebox_current_l1",
+        translation_key="blebox_current_l1",
+        name="Prąd L1",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        icon="mdi:current-ac",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 1, "current"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_current_l2",
+        translation_key="blebox_current_l2",
+        name="Prąd L2",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        icon="mdi:current-ac",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 2, "current"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_current_l3",
+        translation_key="blebox_current_l3",
+        name="Prąd L3",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        icon="mdi:current-ac",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 3, "current"),
+    ),
+    # Frequency
+    PstrykSensorEntityDescription(
+        key="blebox_frequency",
+        translation_key="blebox_frequency",
+        name="Częstotliwość sieci",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:waveform",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 0, "frequency"),
+    ),
+    # Energy counters (total register from meter)
+    PstrykSensorEntityDescription(
+        key="blebox_energy_import",
+        translation_key="blebox_energy_import",
+        name="Energia pobrana (licznik)",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        icon="mdi:transmission-tower-import",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 0, "forwardActiveEnergy"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_energy_export",
+        translation_key="blebox_energy_export",
+        name="Energia oddana (licznik)",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        icon="mdi:transmission-tower-export",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_phase(data, 0, "reverseActiveEnergy"),
+    ),
+)
+
+
+# ──────────── BleBox tg φ Sensors ────────────
+
+BLEBOX_TG_PHI_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
+    # 1 minute (instantaneous from power)
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qi_minute",
+        translation_key="blebox_tg_phi_qi_minute",
+        name="tg φ QI (chwilowe)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "minute_qi"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qiv_minute",
+        translation_key="blebox_tg_phi_qiv_minute",
+        name="tg φ QIV (chwilowe)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "minute_qiv"),
+    ),
+    # Month
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qi_month",
+        translation_key="blebox_tg_phi_qi_month",
+        name="tg φ QI (miesiąc)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "month_qi"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qiv_month",
+        translation_key="blebox_tg_phi_qiv_month",
+        name="tg φ QIV (miesiąc)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "month_qiv"),
+    ),
+    # Year
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qi_year",
+        translation_key="blebox_tg_phi_qi_year",
+        name="tg φ QI (rok)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "year_qi"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qiv_year",
+        translation_key="blebox_tg_phi_qiv_year",
+        name="tg φ QIV (rok)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "year_qiv"),
+    ),
+    # Total (all-time)
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qi_total",
+        translation_key="blebox_tg_phi_qi_total",
+        name="tg φ QI (całościowe)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "total_qi"),
+    ),
+    PstrykSensorEntityDescription(
+        key="blebox_tg_phi_qiv_total",
+        translation_key="blebox_tg_phi_qiv_total",
+        name="tg φ QIV (całościowe)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        icon="mdi:angle-acute",
+        coordinator_type="blebox",
+        value_fn=lambda data: _blebox_tg_phi(data, "total_qiv"),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -325,6 +612,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     metrics_coordinator: PstrykMetricsCoordinator = data["metrics_coordinator"]
     pricing_coordinator: PstrykPricingCoordinator = data["pricing_coordinator"]
+    blebox_coordinator: PstrykBleBoxCoordinator | None = data.get("blebox_coordinator")
     is_prosumer = entry.options.get(CONF_IS_PROSUMER, False)
 
     entities: list[PstrykSensorEntity] = []
@@ -354,6 +642,23 @@ async def async_setup_entry(
                 PstrykSensorEntity(pricing_coordinator, description, entry)
             )
 
+    # Add BleBox local meter sensors
+    if blebox_coordinator:
+        blebox_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_blebox")},
+            name="Pstryk Meter",
+            manufacturer="BleBox",
+            model="Smart Meter",
+            via_device=(DOMAIN, entry.entry_id),
+        )
+        for description in (*BLEBOX_SENSORS, *BLEBOX_TG_PHI_SENSORS):
+            entities.append(
+                PstrykSensorEntity(
+                    blebox_coordinator, description, entry,
+                    device_info=blebox_device_info,
+                )
+            )
+
     async_add_entities(entities)
 
 
@@ -364,9 +669,10 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: PstrykMetricsCoordinator | PstrykPricingCoordinator,
+        coordinator: PstrykMetricsCoordinator | PstrykPricingCoordinator | PstrykBleBoxCoordinator,
         description: PstrykSensorEntityDescription,
         entry: ConfigEntry,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -374,7 +680,7 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_has_entity_name = True
         self._attr_attribution = ATTRIBUTION
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = device_info or DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Pstryk Energy",
             manufacturer="Marcin Koźliński",

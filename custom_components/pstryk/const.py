@@ -19,6 +19,9 @@ CONF_IS_PROSUMER = "is_prosumer"
 CONF_TIMEZONE = "timezone"
 CONF_SCAN_INTERVAL_MINUTES = "scan_interval"
 
+# BleBox local meter
+CONF_BLEBOX_IP = "blebox_ip"
+
 # Defaults
 DEFAULT_TIMEZONE = "Europe/Warsaw"
 DEFAULT_SCAN_INTERVAL = 30  # minutes
@@ -27,6 +30,7 @@ DEFAULT_NAME = "Pstryk"
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)
 UPDATE_INTERVAL_PRICING = timedelta(minutes=45)
+UPDATE_INTERVAL_BLEBOX = timedelta(seconds=5)
 
 # Metrics
 METRIC_METER_VALUES = "meter_values"
