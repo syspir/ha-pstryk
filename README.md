@@ -21,10 +21,6 @@ Integracja Home Assistant dla [Pstryk](https://pstryk.pl) - polskiej platformy z
 - Szczegółowy podział: koszt energii, dystrybucja, VAT, akcyza
 - Wartość sprzedanej energii (prosument)
 
-### Ślad węglowy (CO2)
-- Emisja CO2 (godzinowo, dziennie, miesięcznie)
-- Wartości w gCO2eq
-
 ### Ceny TGE (giełda energii)
 - Aktualna cena energii (netto/brutto)
 - Średnia cena
@@ -53,7 +49,7 @@ Podczas konfiguracji podaj:
 - **Token API** - token z panelu [app.pstryk.pl](https://app.pstryk.pl) (format: `sk-...`)
 - **Prosument** - zaznacz jeśli masz fotowoltaikę
 - **Strefa czasowa** - domyślnie `Europe/Warsaw`
-- **Interwał odświeżania** - domyślnie 15 minut (zakres: 5-120 min)
+- **Interwał odświeżania** - domyślnie 15 minut (zakres: 15-120 min)
 
 ## Sensory
 
@@ -66,7 +62,6 @@ Podczas konfiguracji podaj:
 | `sensor.pstryk_energy_export_month` | kWh | Energia oddana w miesiącu |
 | `sensor.pstryk_total_cost_today` | PLN | Koszt energii dziś |
 | `sensor.pstryk_total_cost_month` | PLN | Koszt energii w miesiącu |
-| `sensor.pstryk_carbon_footprint_today` | gCO2eq | Ślad węglowy dziś |
 | `sensor.pstryk_current_price_gross` | PLN/kWh | Aktualna cena brutto |
 | `sensor.pstryk_is_cheap_now` | bool | Czy teraz tania energia |
 | `sensor.pstryk_cheapest_upcoming_price` | PLN/kWh | Najtańsza nadchodząca cena |
@@ -96,7 +91,6 @@ entities:
   - entity: sensor.pstryk_energy_current_price_gross
   - entity: sensor.pstryk_energy_total_cost_today
   - entity: sensor.pstryk_energy_energy_import_today
-  - entity: sensor.pstryk_energy_carbon_footprint_today
 ```
 
 ## Wymagania
