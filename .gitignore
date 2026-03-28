@@ -14,3 +14,5 @@ venv/
 *.swp
 *.swo
 .DS_Store
+.claude/.env
+node_modules/

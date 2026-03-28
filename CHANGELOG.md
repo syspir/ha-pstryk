@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.5] - 2026-03-28
+
+### Naprawione
+- Panel frontendowy — fallback dla `css` tagged template w nowszych wersjach HA (TypeError: css is not a function)
+
 ## [0.4.4] - 2026-03-28
 
 ### Naprawione

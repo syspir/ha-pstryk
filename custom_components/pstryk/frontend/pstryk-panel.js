@@ -6,7 +6,14 @@ const LitElement =
     Object.getPrototypeOf(customElements.get("hui-view")) :
     Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 
-const { html, css } = LitElement.prototype;
+const html = LitElement.prototype.html;
+
+// W nowszych HA css nie jest na prototypie LitElement — tworzymy kompatybilną implementację
+const css = LitElement.prototype.css || function(strings, ...values) {
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), ""));
+  return sheet;
+};
 
 class PstrykPanel extends LitElement {
   static get properties() {
