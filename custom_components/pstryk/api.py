@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -56,20 +55,15 @@ class PstrykApiClient:
         }
 
     async def _request(
-        self, url: str, params: dict[str, Any] | None = None, _retry: int = 0
+        self, url: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Make an authenticated request to the API."""
-        max_retries = 3
         try:
             async with self._session.get(
                 url, headers=self._headers, params=params, timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
                 if response.status == 429:
-                    if _retry < max_retries:
-                        retry_after = int(response.headers.get("Retry-After", 5))
-                        _LOGGER.warning("Rate limited (429), retry %s/%s after %ss", _retry + 1, max_retries, retry_after)
-                        await asyncio.sleep(retry_after)
-                        return await self._request(url, params, _retry + 1)
+                    _LOGGER.warning("Rate limited (429), skipping until next update cycle")
                     raise PstrykApiError("Rate limited (429) - too many requests")
                 if response.status == 401:
                     raise PstrykAuthError("Invalid API token")
