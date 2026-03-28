@@ -7,12 +7,14 @@
         "data": {
           "api_token": "Token API",
           "is_prosumer": "Jestem prosumentem (fotowoltaika)",
+          "enable_panel": "Włącz panel w menu bocznym",
           "timezone": "Strefa czasowa",
           "scan_interval": "Interwał odświeżania (minuty)"
         },
         "data_description": {
           "api_token": "Token autoryzacyjny z panelu Pstryk (format: sk-...)",
           "is_prosumer": "Zaznacz jeśli posiadasz instalację fotowoltaiczną i oddajesz energię do sieci",
+          "enable_panel": "Wyświetla dedykowany panel Pstryk Energy w menu bocznym Home Assistant",
           "timezone": "Strefa czasowa do agregacji danych",
           "scan_interval": "Jak często pobierać dane (domyślnie co 15 minut)"
         }
@@ -33,7 +35,8 @@
         "title": "Opcje Pstryk Energy",
         "data": {
           "scan_interval": "Interwał odświeżania (minuty)",
-          "is_prosumer": "Jestem prosumentem (fotowoltaika)"
+          "is_prosumer": "Jestem prosumentem (fotowoltaika)",
+          "enable_panel": "Włącz panel w menu bocznym"
         }
       }
     }

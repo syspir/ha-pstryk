@@ -16,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import PstrykApiClient
 from .const import (
     CONF_API_TOKEN,
+    CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_TIMEZONE,
@@ -75,14 +76,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register panel (only once)
-    if "panel_registered" not in hass.data[DOMAIN]:
-        panel_path = Path(__file__).parent / "frontend"
-        hass.http.register_static_path(
-            "/pstryk_panel",
-            str(panel_path),
-            cache_headers=False,
-        )
+    # Register/unregister panel based on option
+    enable_panel = entry.options.get(CONF_ENABLE_PANEL, True)
+
+    if enable_panel and "panel_registered" not in hass.data[DOMAIN]:
+        if "static_path_registered" not in hass.data[DOMAIN]:
+            panel_path = Path(__file__).parent / "frontend"
+            hass.http.register_static_path(
+                "/pstryk_panel",
+                str(panel_path),
+                cache_headers=False,
+            )
+            hass.data[DOMAIN]["static_path_registered"] = True
         hass.components.frontend.async_register_panel(
             component_name="custom",
             sidebar_title=PANEL_TITLE,
@@ -97,6 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             require_admin=False,
         )
         hass.data[DOMAIN]["panel_registered"] = True
+    elif not enable_panel and "panel_registered" in hass.data[DOMAIN]:
+        hass.components.frontend.async_remove_panel(PANEL_URL)
+        hass.data[DOMAIN].pop("panel_registered", None)
 
     # Listen for options updates
     entry.async_on_unload(entry.add_update_listener(async_update_options))

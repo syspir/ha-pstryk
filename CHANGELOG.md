@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-03-28
+
+### Dodane
+- Opcja włączenia/wyłączenia panelu w menu bocznym (domyślnie włączony)
+- Konfiguracja panelu dostępna podczas instalacji oraz w opcjach integracji
+
 ## [0.2.0] - 2026-03-28
 
 ### Dodane

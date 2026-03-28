@@ -44,6 +44,7 @@ RESOLUTION_MONTH = "month"
 ATTRIBUTION = "Dane dostarczone przez Pstryk"
 
 # Panel
+CONF_ENABLE_PANEL = "enable_panel"
 PANEL_URL = "pstryk-energy"
 PANEL_ICON = "mdi:flash"
 PANEL_TITLE = "Pstryk Energy"

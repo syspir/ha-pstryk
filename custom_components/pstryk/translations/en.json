@@ -7,12 +7,14 @@
         "data": {
           "api_token": "API Token",
           "is_prosumer": "I am a prosumer (solar panels)",
+          "enable_panel": "Enable sidebar panel",
           "timezone": "Timezone",
           "scan_interval": "Update interval (minutes)"
         },
         "data_description": {
           "api_token": "Authorization token from Pstryk panel (format: sk-...)",
           "is_prosumer": "Check if you have a solar installation and feed energy to the grid",
+          "enable_panel": "Show a dedicated Pstryk Energy panel in the Home Assistant sidebar",
           "timezone": "Timezone for data aggregation",
           "scan_interval": "How often to fetch data (default: every 15 minutes)"
         }
@@ -33,7 +35,8 @@
         "title": "Pstryk Energy Options",
         "data": {
           "scan_interval": "Update interval (minutes)",
-          "is_prosumer": "I am a prosumer (solar panels)"
+          "is_prosumer": "I am a prosumer (solar panels)",
+          "enable_panel": "Enable sidebar panel"
         }
       }
     }

@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import PstrykApiClient, PstrykAuthError, PstrykConnectionError
 from .const import (
     CONF_API_TOKEN,
+    CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_TIMEZONE,
@@ -69,6 +70,7 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                         options={
                             CONF_IS_PROSUMER: user_input.get(CONF_IS_PROSUMER, False),
+                            CONF_ENABLE_PANEL: user_input.get(CONF_ENABLE_PANEL, True),
                             CONF_SCAN_INTERVAL_MINUTES: user_input.get(
                                 CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
                             ),
@@ -88,6 +90,7 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_API_TOKEN): str,
                     vol.Optional(CONF_IS_PROSUMER, default=False): bool,
+                    vol.Optional(CONF_ENABLE_PANEL, default=True): bool,
                     vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): str,
                     vol.Optional(
                         CONF_SCAN_INTERVAL_MINUTES, default=DEFAULT_SCAN_INTERVAL
@@ -125,6 +128,10 @@ class PstrykOptionsFlow(OptionsFlow):
                     vol.Optional(
                         CONF_IS_PROSUMER,
                         default=self.config_entry.options.get(CONF_IS_PROSUMER, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ENABLE_PANEL,
+                        default=self.config_entry.options.get(CONF_ENABLE_PANEL, True),
                     ): bool,
                     vol.Optional(
                         CONF_SCAN_INTERVAL_MINUTES,
