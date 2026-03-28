@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.3] - 2026-03-28
+
+### Naprawione
+- Panel w sidebarze rejestruje się natychmiast po instalacji, niezależnie od dostępności API
+
 ## [0.4.2] - 2026-03-28
 
 ### Naprawione
