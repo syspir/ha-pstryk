@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.7] - 2026-03-28
+
+### Zmienione
+- Producent urządzenia zmieniony na Twoje-Miasto Sp. z o.o.
+- Link "Odwiedź" kieruje na twoje-miasto.pl
+
 ## [0.4.6] - 2026-03-28
 
 ### Dodane

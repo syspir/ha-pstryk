@@ -517,10 +517,10 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Pstryk Energy",
-            manufacturer="Pstryk",
+            manufacturer="Twoje-Miasto Sp. z o.o.",
             model="Smart Meter Integration",
             entry_type=None,
-            configuration_url="https://app.pstryk.pl",
+            configuration_url="https://www.twoje-miasto.pl",
         )
 
     @property
