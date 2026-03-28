@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - 2026-03-28
+
+### Zmienione
+- Usunięto retry przy błędzie 429 (rate limit) — czekanie do następnego cyklu odświeżania zamiast dodatkowych zapytań
+- Usunięto odniesienia do CO2 z dokumentacji
+
 ## [0.4.0] - 2026-03-28
 
 ### Zmienione
