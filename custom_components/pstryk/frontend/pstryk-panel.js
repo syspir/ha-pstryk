@@ -67,8 +67,13 @@ class PstrykPanel extends LitElement {
         color: var(--primary-text-color);
         padding: 8px 0 16px;
       }
-      .header-logo {
+      .header-logos {
+        display: flex;
+        align-items: center;
+        gap: 16px;
         margin-left: auto;
+      }
+      .header-logo {
         opacity: 0.6;
         transition: opacity 0.2s;
       }
@@ -261,10 +266,10 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:pulse"></ha-icon>
             Dane na żywo
           </div>
-          ${this._renderMetric("Energia pobrana", `${prefix}energy_import_current_hour`)}
-          ${this._renderMetric("Energia oddana", `${prefix}energy_export_current_hour`)}
-          ${this._renderMetric("Koszt", `${prefix}cost_current_hour`)}
-          ${this._renderMetric("Cena TGE", `${prefix}unified_price_current_hour`)}
+          ${this._renderMetric("Energia pobrana", `${prefix}energia_pobrana_biezaca_godzina`)}
+          ${this._renderMetric("Energia oddana", `${prefix}energia_oddana_biezaca_godzina`)}
+          ${this._renderMetric("Koszt", `${prefix}koszt_biezaca_godzina`)}
+          ${this._renderMetric("Cena TGE", `${prefix}cena_tge_biezaca_godzina_z_metryki`)}
         </ha-card>
       </div>
     `;
@@ -280,18 +285,18 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:calendar-today"></ha-icon>
             Dziś
           </div>
-          ${this._renderMetric("Pobrana", `${prefix}energy_import_today`)}
-          ${this._renderMetric("Oddana", `${prefix}energy_export_today`)}
-          ${this._renderMetric("Bilans", `${prefix}energy_balance_today`)}
+          ${this._renderMetric("Pobrana", `${prefix}energia_pobrana_dzis`)}
+          ${this._renderMetric("Oddana", `${prefix}energia_oddana_dzis`)}
+          ${this._renderMetric("Bilans", `${prefix}bilans_energii_dzis`)}
         </ha-card>
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:calendar-month"></ha-icon>
             Miesiąc
           </div>
-          ${this._renderMetric("Pobrana", `${prefix}energy_import_month`)}
-          ${this._renderMetric("Oddana", `${prefix}energy_export_month`)}
-          ${this._renderMetric("Bilans", `${prefix}energy_balance_month`)}
+          ${this._renderMetric("Pobrana", `${prefix}energia_pobrana_w_miesiacu`)}
+          ${this._renderMetric("Oddana", `${prefix}energia_oddana_w_miesiacu`)}
+          ${this._renderMetric("Bilans", `${prefix}bilans_energii_w_miesiacu`)}
         </ha-card>
       </div>
     `;
@@ -307,16 +312,16 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:cash"></ha-icon>
             Dziś
           </div>
-          ${this._renderMetric("Koszt energii", `${prefix}total_cost_today`)}
-          ${this._renderMetric("Wartość sprzedanej", `${prefix}energy_sold_value_today`)}
+          ${this._renderMetric("Koszt energii", `${prefix}koszt_energii_dzis`)}
+          ${this._renderMetric("Wartość sprzedanej", `${prefix}wartosc_sprzedanej_energii_dzis`)}
         </ha-card>
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:cash-multiple"></ha-icon>
             Miesiąc
           </div>
-          ${this._renderMetric("Koszt energii", `${prefix}total_cost_month`)}
-          ${this._renderMetric("Wartość sprzedanej", `${prefix}energy_sold_value_month`)}
+          ${this._renderMetric("Koszt energii", `${prefix}koszt_energii_w_miesiacu`)}
+          ${this._renderMetric("Wartość sprzedanej", `${prefix}wartosc_sprzedanej_energii_w_miesiacu`)}
         </ha-card>
       </div>
     `;
@@ -324,18 +329,18 @@ class PstrykPanel extends LitElement {
 
   _renderPricingSection() {
     const prefix = "sensor.pstryk_energy_";
-    const isCheap = this._getState(`${prefix}is_cheap_now`);
-    const isExpensive = this._getState(`${prefix}is_expensive_now`);
+    const isCheap = this._getState(`${prefix}tania_energia_teraz`);
+    const isExpensive = this._getState(`${prefix}droga_energia_teraz`);
 
-    const cheapestStart = this._getAttr(`${prefix}cheapest_upcoming_price`, "start");
-    const cheapestEnd = this._getAttr(`${prefix}cheapest_upcoming_price`, "end");
-    const expensiveStart = this._getAttr(`${prefix}most_expensive_upcoming_price`, "start");
-    const expensiveEnd = this._getAttr(`${prefix}most_expensive_upcoming_price`, "end");
+    const cheapestStart = this._getAttr(`${prefix}najtansza_nadchodzaca_cena`, "start");
+    const cheapestEnd = this._getAttr(`${prefix}najtansza_nadchodzaca_cena`, "end");
+    const expensiveStart = this._getAttr(`${prefix}najdrozsza_nadchodzaca_cena`, "start");
+    const expensiveEnd = this._getAttr(`${prefix}najdrozsza_nadchodzaca_cena`, "end");
 
     let badge = html``;
-    if (isCheap === "True") {
+    if (isCheap === "True" || isCheap === "1") {
       badge = html`<span class="badge badge-cheap">Tania energia</span>`;
-    } else if (isExpensive === "True") {
+    } else if (isExpensive === "True" || isExpensive === "1") {
       badge = html`<span class="badge badge-expensive">Droga energia</span>`;
     } else if (isCheap !== null) {
       badge = html`<span class="badge badge-neutral">Normalna cena</span>`;
@@ -350,11 +355,11 @@ class PstrykPanel extends LitElement {
             Aktualne ceny
             ${badge}
           </div>
-          ${this._renderMetric("Cena brutto", `${prefix}current_price_gross`)}
-          ${this._renderMetric("Cena netto", `${prefix}current_price_net`)}
-          ${this._renderMetric("Pełna cena (z dystrybucją)", `${prefix}current_full_price`)}
-          ${this._renderMetric("Średnia brutto", `${prefix}avg_price_gross`)}
-          ${this._renderMetric("Średnia netto", `${prefix}avg_price_net`)}
+          ${this._renderMetric("Cena brutto", `${prefix}aktualna_cena_energii_brutto`)}
+          ${this._renderMetric("Cena netto", `${prefix}aktualna_cena_energii_netto`)}
+          ${this._renderMetric("Pełna cena (z dystrybucją)", `${prefix}pelna_cena_energii_z_dystrybucja`)}
+          ${this._renderMetric("Średnia brutto", `${prefix}srednia_cena_energii_brutto`)}
+          ${this._renderMetric("Średnia netto", `${prefix}srednia_cena_energii_netto`)}
         </ha-card>
         <ha-card>
           <div class="card-header">
@@ -366,14 +371,14 @@ class PstrykPanel extends LitElement {
               <div class="metric-label">Najtańsza</div>
               ${cheapestStart ? html`<div class="price-time">${this._formatTime(cheapestStart)} - ${this._formatTime(cheapestEnd)}</div>` : ""}
             </div>
-            <span class="metric-value">${this._formatValue(`${prefix}cheapest_upcoming_price`)}</span>
+            <span class="metric-value">${this._formatValue(`${prefix}najtansza_nadchodzaca_cena`)}</span>
           </div>
           <div class="metric">
             <div>
               <div class="metric-label">Najdroższa</div>
               ${expensiveStart ? html`<div class="price-time">${this._formatTime(expensiveStart)} - ${this._formatTime(expensiveEnd)}</div>` : ""}
             </div>
-            <span class="metric-value">${this._formatValue(`${prefix}most_expensive_upcoming_price`)}</span>
+            <span class="metric-value">${this._formatValue(`${prefix}najdrozsza_nadchodzaca_cena`)}</span>
           </div>
         </ha-card>
       </div>
@@ -382,7 +387,7 @@ class PstrykPanel extends LitElement {
 
   _renderProsumerSection() {
     const prefix = "sensor.pstryk_energy_";
-    if (!this._entityExists(`${prefix}prosumer_price_gross`)) {
+    if (!this._entityExists(`${prefix}cena_prosumencka_brutto`)) {
       return html``;
     }
     return html`
@@ -393,9 +398,9 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:solar-power"></ha-icon>
             Ceny prosumenckie
           </div>
-          ${this._renderMetric("Cena brutto", `${prefix}prosumer_price_gross`)}
-          ${this._renderMetric("Cena netto", `${prefix}prosumer_price_net`)}
-          ${this._renderMetric("Średnia brutto", `${prefix}prosumer_avg_price_gross`)}
+          ${this._renderMetric("Cena brutto", `${prefix}cena_prosumencka_brutto`)}
+          ${this._renderMetric("Cena netto", `${prefix}cena_prosumencka_netto`)}
+          ${this._renderMetric("Średnia brutto", `${prefix}srednia_cena_prosumencka_brutto`)}
         </ha-card>
       </div>
     `;
@@ -407,9 +412,14 @@ class PstrykPanel extends LitElement {
       <div class="header">
         <ha-icon icon="mdi:flash"></ha-icon>
         Pstryk Energy
-        <a class="header-logo" href="https://www.twoje-miasto.pl" target="_blank" rel="noopener noreferrer">
-          <img src="https://im.twoje-miasto.pl/theme/1/images/logo.png" alt="Twoje-Miasto">
-        </a>
+        <div class="header-logos">
+          <a class="header-logo" href="https://pstryk.pl" target="_blank" rel="noopener noreferrer">
+            <img src="https://pstryk.pl/img/logo.svg" alt="Pstryk">
+          </a>
+          <a class="header-logo" href="https://www.twoje-miasto.pl" target="_blank" rel="noopener noreferrer">
+            <img src="https://im.twoje-miasto.pl/theme/1/images/logo.png" alt="Twoje-Miasto">
+          </a>
+        </div>
       </div>
       ${this._renderLiveSection()}
       ${this._renderEnergySection()}

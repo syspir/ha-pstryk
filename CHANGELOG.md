@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.1] - 2026-03-28
+
+### Dodane
+- Logo Pstryk z linkiem do pstryk.pl w nagłówku panelu
+
+### Naprawione
+- Panel wyświetlał puste dane (---) — poprawiono entity ID na zgodne z faktycznymi nazwami w HA
+- Badge ceny (tania/droga/normalna) nie działał — poprawiono porównanie wartości stanu
+
 ## [0.5.0] - 2026-03-28
 
 ### Zmienione
