@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-28
+# Ostatnia modyfikacja: 2026-03-29
 
 """API client for Pstryk Energy."""
 
@@ -139,15 +139,17 @@ class PstrykApiClient:
         return await self._request(url, params)
 
     async def get_current_pricing(self) -> dict[str, Any]:
-        """Get pricing for next 24h (hourly)."""
+        """Get pricing for today and tomorrow (hourly)."""
         now = datetime.now(timezone.utc)
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=2)
         return await self._get_pricing_data(
-            PRICING_URL, now - timedelta(hours=1), now + timedelta(hours=24)
+            PRICING_URL, start_of_today, now + timedelta(hours=48)
         )
 
     async def get_current_prosumer_pricing(self) -> dict[str, Any]:
-        """Get prosumer pricing for next 24h (hourly)."""
+        """Get prosumer pricing for today and tomorrow (hourly)."""
         now = datetime.now(timezone.utc)
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=2)
         return await self._get_pricing_data(
-            PROSUMER_PRICING_URL, now - timedelta(hours=1), now + timedelta(hours=24)
+            PROSUMER_PRICING_URL, start_of_today, now + timedelta(hours=48)
         )

@@ -1,12 +1,12 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-28
+# Ostatnia modyfikacja: 2026-03-29
 
 """Data update coordinators for Pstryk Energy."""
 
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -91,67 +91,91 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         self.is_prosumer = is_prosumer
         self.attribution = ATTRIBUTION
+        self._raw_pricing: dict[str, Any] | None = None
+        self._raw_prosumer: dict[str, Any] | None = None
+
+    def _find_current_frame(self, frames: list[dict]) -> dict | None:
+        """Find the frame matching current time based on start/end."""
+        now = datetime.now(timezone.utc)
+        for frame in frames:
+            start = frame.get("start")
+            end = frame.get("end")
+            if start and end:
+                try:
+                    frame_start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+                    frame_end = datetime.fromisoformat(end.replace("Z", "+00:00"))
+                    if frame_start <= now < frame_end:
+                        return frame
+                except (ValueError, TypeError):
+                    continue
+        return None
+
+    def _process_data(self) -> dict[str, Any]:
+        """Process stored raw data to determine current prices."""
+        pricing = self._raw_pricing or {}
+
+        all_frames = pricing.get("frames", [])
+        current_price = self._find_current_frame(all_frames)
+        next_prices: list[dict] = []
+        cheapest_upcoming = None
+        most_expensive_upcoming = None
+
+        if all_frames and current_price:
+            now = datetime.now(timezone.utc)
+            for frame in all_frames:
+                start = frame.get("start")
+                if start:
+                    try:
+                        frame_start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+                        if frame_start > now:
+                            next_prices.append(frame)
+                    except (ValueError, TypeError):
+                        continue
+        elif all_frames:
+            current_price = all_frames[-1]
+
+        if next_prices:
+            cheapest_upcoming = min(
+                next_prices,
+                key=lambda f: f.get("full_price") or f.get("price_gross") or 999,
+            )
+            most_expensive_upcoming = max(
+                next_prices,
+                key=lambda f: f.get("full_price") or f.get("price_gross") or 0,
+            )
+
+        result: dict[str, Any] = {
+            "pricing": pricing,
+            "all_frames": all_frames,
+            "current_price": current_price,
+            "next_prices": next_prices,
+            "cheapest_upcoming": cheapest_upcoming,
+            "most_expensive_upcoming": most_expensive_upcoming,
+            "price_net_avg": pricing.get("price_net_avg"),
+            "price_gross_avg": pricing.get("price_gross_avg"),
+        }
+
+        if self.is_prosumer and self._raw_prosumer:
+            prosumer = self._raw_prosumer
+            prosumer_frames = prosumer.get("frames", [])
+            prosumer_current = self._find_current_frame(prosumer_frames)
+            if not prosumer_current and prosumer_frames:
+                prosumer_current = prosumer_frames[-1]
+
+            result["prosumer_pricing"] = prosumer
+            result["prosumer_current_price"] = prosumer_current
+            result["prosumer_price_net_avg"] = prosumer.get("price_net_avg")
+            result["prosumer_price_gross_avg"] = prosumer.get("price_gross_avg")
+
+        return result
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch pricing data from API."""
         try:
-            pricing = await self.client.get_current_pricing()
-
-            current_price = None
-            next_prices: list[dict] = []
-            cheapest_upcoming = None
-            most_expensive_upcoming = None
-
-            if pricing.get("frames"):
-                found_live = False
-                for frame in pricing["frames"]:
-                    if frame.get("is_live"):
-                        current_price = frame
-                        found_live = True
-                        continue
-                    if found_live:
-                        next_prices.append(frame)
-
-                if not current_price and pricing["frames"]:
-                    current_price = pricing["frames"][-1]
-
-                if next_prices:
-                    cheapest_upcoming = min(
-                        next_prices,
-                        key=lambda f: f.get("price_gross") or f.get("price_gross_avg") or 999,
-                    )
-                    most_expensive_upcoming = max(
-                        next_prices,
-                        key=lambda f: f.get("price_gross") or f.get("price_gross_avg") or 0,
-                    )
-
-            result: dict[str, Any] = {
-                "pricing": pricing,
-                "current_price": current_price,
-                "next_prices": next_prices,
-                "cheapest_upcoming": cheapest_upcoming,
-                "most_expensive_upcoming": most_expensive_upcoming,
-                "price_net_avg": pricing.get("price_net_avg"),
-                "price_gross_avg": pricing.get("price_gross_avg"),
-            }
-
+            self._raw_pricing = await self.client.get_current_pricing()
             if self.is_prosumer:
-                prosumer = await self.client.get_current_prosumer_pricing()
-                prosumer_current = None
-                if prosumer.get("frames"):
-                    for frame in prosumer["frames"]:
-                        if frame.get("is_live"):
-                            prosumer_current = frame
-                            break
-                    if not prosumer_current:
-                        prosumer_current = prosumer["frames"][-1]
-
-                result["prosumer_pricing"] = prosumer
-                result["prosumer_current_price"] = prosumer_current
-                result["prosumer_price_net_avg"] = prosumer.get("price_net_avg")
-                result["prosumer_price_gross_avg"] = prosumer.get("price_gross_avg")
-
-            return result
+                self._raw_prosumer = await self.client.get_current_prosumer_pricing()
+            return self._process_data()
         except PstrykAuthError as err:
             raise UpdateFailed(f"Authentication error: {err}") from err
         except PstrykApiError as err:
@@ -159,3 +183,8 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.warning("Pricing API error, keeping last data: %s", err)
                 return self.data
             raise UpdateFailed(f"API error: {err}") from err
+
+    def recalculate_current(self) -> None:
+        """Recalculate current price from stored frames (no API call)."""
+        if self._raw_pricing:
+            self.async_set_updated_data(self._process_data())

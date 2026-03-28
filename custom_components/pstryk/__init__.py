@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-28
+# Ostatnia modyfikacja: 2026-03-29
 
 """The Pstryk Energy integration."""
 
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
 from .api import PstrykApiClient, PstrykApiError
 from .const import (
@@ -62,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=8",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=9",
                 }
             },
             require_admin=False,
@@ -125,6 +126,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # 1-minute tick to recalculate current price frame (no API call)
+    cancel_tick = async_track_time_interval(
+        hass,
+        lambda _: pricing_coordinator.recalculate_current(),
+        timedelta(minutes=1),
+    )
+    entry.async_on_unload(cancel_tick)
 
     # Listen for options updates
     entry.async_on_unload(entry.add_update_listener(async_update_options))

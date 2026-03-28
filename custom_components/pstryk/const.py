@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-28
+# Ostatnia modyfikacja: 2026-03-29
 
 """Constants for the Pstryk Energy integration."""
 
@@ -21,7 +21,7 @@ CONF_SCAN_INTERVAL_MINUTES = "scan_interval"
 
 # Defaults
 DEFAULT_TIMEZONE = "Europe/Warsaw"
-DEFAULT_SCAN_INTERVAL = 15  # minutes
+DEFAULT_SCAN_INTERVAL = 30  # minutes
 DEFAULT_NAME = "Pstryk"
 
 # Update intervals
