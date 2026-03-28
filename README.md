@@ -1,0 +1,120 @@
+# Pstryk Energy - Home Assistant Integration
+
+[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/release/syspir/ha-pstryk.svg)](https://github.com/syspir/ha-pstryk/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/syspir/ha-pstryk/total.svg)](https://github.com/syspir/ha-pstryk/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/syspir/ha-pstryk.svg?style=social)](https://github.com/syspir/ha-pstryk)
+
+Integracja Home Assistant dla [Pstryk](https://pstryk.pl) - polskiej platformy zarządzania energią elektryczną z inteligentnym licznikiem. Wykorzystuje nowe Unified Metrics API.
+
+> **Użytek prywatny** — ta integracja jest przeznaczona wyłącznie do niekomercyjnego użytku osobistego przez konsumentów posiadających konto Pstryk. Zgodnie z [Regulaminem API Pstryk](https://pstryk.pl/regulamin-api) korzystanie z API dozwolone jest wyłącznie na własne potrzeby, bez udostępniania danych osobom trzecim i bez jakiejkolwiek formy monetyzacji.
+
+## Funkcje
+
+### Zużycie energii
+- Energia pobrana/oddana (godzinowo, dziennie, miesięcznie)
+- Bilans energetyczny
+- Dane z bieżącej godziny (live)
+
+### Koszty
+- Koszt energii (dziś/miesiąc)
+- Szczegółowy podział: koszt energii, dystrybucja, VAT, akcyza
+- Wartość sprzedanej energii (prosument)
+
+### Ceny TGE (giełda energii)
+- Aktualna cena energii (netto/brutto)
+- Średnia cena
+- Informacja: tania/droga energia teraz
+- Najtańsza i najdroższa nadchodząca cena
+- Pełna cena z komponentami (dystrybucja, akcyza, VAT)
+
+### Prosument
+- Cena prosumencka (netto/brutto)
+- Średnia cena prosumencka
+
+## Instalacja przez HACS
+
+1. Otwórz HACS w Home Assistant
+2. Kliknij **⋮** (trzy kropki) → **Custom repositories**
+3. Dodaj URL: `https://github.com/syspir/ha-pstryk`
+4. Kategoria: **Integration**
+5. Kliknij **Add** → znajdź "Pstryk Energy" → **Install**
+6. Zrestartuj Home Assistant
+7. Przejdź do **Ustawienia** → **Urządzenia i usługi** → **Dodaj integrację** → szukaj "Pstryk"
+
+## Konfiguracja
+
+Podczas konfiguracji podaj:
+
+- **Token API** - token z panelu [app.pstryk.pl](https://app.pstryk.pl) (format: `sk-...`)
+- **Prosument** - zaznacz jeśli masz fotowoltaikę
+- **Strefa czasowa** - domyślnie `Europe/Warsaw`
+- **Interwał odświeżania** - domyślnie 15 minut (zakres: 15-120 min)
+
+## Sensory
+
+| Sensor | Jednostka | Opis |
+|--------|-----------|------|
+| `sensor.pstryk_energy_import_today` | kWh | Energia pobrana dziś |
+| `sensor.pstryk_energy_export_today` | kWh | Energia oddana dziś |
+| `sensor.pstryk_energy_balance_today` | kWh | Bilans energii dziś |
+| `sensor.pstryk_energy_import_month` | kWh | Energia pobrana w miesiącu |
+| `sensor.pstryk_energy_export_month` | kWh | Energia oddana w miesiącu |
+| `sensor.pstryk_total_cost_today` | PLN | Koszt energii dziś |
+| `sensor.pstryk_total_cost_month` | PLN | Koszt energii w miesiącu |
+| `sensor.pstryk_current_price_gross` | PLN/kWh | Aktualna cena brutto |
+| `sensor.pstryk_is_cheap_now` | bool | Czy teraz tania energia |
+| `sensor.pstryk_cheapest_upcoming_price` | PLN/kWh | Najtańsza nadchodząca cena |
+| `sensor.pstryk_prosumer_price_gross` | PLN/kWh | Cena prosumencka brutto |
+
+## Automatyzacje
+
+### Przykład: powiadomienie o taniej energii
+```yaml
+automation:
+  - alias: "Tania energia - włącz ładowanie"
+    trigger:
+      - platform: state
+        entity_id: sensor.pstryk_energy_is_cheap_now
+        to: "True"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.ev_charger
+```
+
+### Przykład: dashboard z kosztami
+```yaml
+type: entities
+title: Pstryk Energy
+entities:
+  - entity: sensor.pstryk_energy_current_price_gross
+  - entity: sensor.pstryk_energy_total_cost_today
+  - entity: sensor.pstryk_energy_energy_import_today
+```
+
+## Wymagania
+
+- Home Assistant 2024.1.0+
+- Konto Pstryk z tokenem API
+- Inteligentny licznik podłączony do Pstryk
+
+## Użytek prywatny i warunki korzystania z API
+
+Integracja korzysta z API Pstryk na zasadach określonych w [Regulaminie API Pstryk](https://pstryk.pl/regulamin-api). Najważniejsze zasady:
+
+- **Tylko dla konsumentów** — z API mogą korzystać wyłącznie osoby fizyczne będące konsumentami w rozumieniu art. 22¹ Kodeksu Cywilnego, posiadające aktywne konto Pstryk
+- **Wyłącznie użytek osobisty** — korzystanie z API i danych jest dozwolone tylko na własne, niekomercyjne potrzeby
+- **Zakaz udostępniania** — dane uzyskane z API nie mogą być udostępniane osobom trzecim
+- **Zakaz monetyzacji** — niedozwolona jest jakakolwiek forma monetyzacji (reklamy, sponsoring, afiliacja, paywall)
+- **Zakaz tworzenia produktów konkurencyjnych** — dane z API nie mogą służyć do budowania usług konkurencyjnych wobec Pstryk
+
+Instalując tę integrację potwierdzasz, że zapoznałeś się z regulaminem API i korzystasz z niej wyłącznie na własny, prywatny użytek.
+
+## Wyłączenie odpowiedzialności
+
+Niniejsze oprogramowanie jest udostępniane w stanie „takim, jakie jest" (_AS IS_), bez jakiejkolwiek gwarancji, wyraźnej ani dorozumianej. Autor nie ponosi odpowiedzialności za jakiekolwiek szkody bezpośrednie, pośrednie, przypadkowe, szczególne ani wynikowe powstałe w związku z korzystaniem z tego oprogramowania. Użytkownik korzysta z integracji na własne ryzyko.
+
+## Licencja
+
+MIT — Copyright (c) 2026 Marcin Koźliński
