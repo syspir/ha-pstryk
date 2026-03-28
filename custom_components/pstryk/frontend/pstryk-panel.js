@@ -1,4 +1,4 @@
-// Twoje-Miasto Sp. z o.o.
+// Twoje-Miasto Sp. z o.o. / Marcin Koźliński
 // Ostatnia modyfikacja: 2026-03-28
 
 const LitElement =
