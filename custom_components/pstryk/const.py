@@ -43,5 +43,10 @@ RESOLUTION_MONTH = "month"
 # Attribution
 ATTRIBUTION = "Dane dostarczone przez Pstryk"
 
+# Panel
+PANEL_URL = "pstryk-energy"
+PANEL_ICON = "mdi:flash"
+PANEL_TITLE = "Pstryk Energy"
+
 # Platforms
 PLATFORMS = ["sensor"]
