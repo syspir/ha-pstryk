@@ -1,14 +1,36 @@
 // Twoje-Miasto Sp. z o.o. / Marcin Koźliński
 // Ostatnia modyfikacja: 2026-03-28
 
-const LitElement =
-  customElements.get("hui-view") ?
-    Object.getPrototypeOf(customElements.get("hui-view")) :
-    Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
+function _getLitElement() {
+  const candidates = ["hui-view", "ha-panel-lovelace", "home-assistant", "hc-lovelace"];
+  for (const name of candidates) {
+    const el = customElements.get(name);
+    if (el) {
+      const proto = Object.getPrototypeOf(el);
+      if (proto && proto.prototype && proto.prototype.html) return proto;
+    }
+  }
+  return null;
+}
+
+async function _waitForLitElement() {
+  const lit = _getLitElement();
+  if (lit) return lit;
+  // Czekaj aż HA załaduje elementy Lovelace
+  return new Promise((resolve) => {
+    const check = () => {
+      const lit = _getLitElement();
+      if (lit) { resolve(lit); return; }
+      setTimeout(check, 100);
+    };
+    setTimeout(check, 100);
+  });
+}
+
+const LitElement = _getLitElement() || await _waitForLitElement();
 
 const html = LitElement.prototype.html;
 
-// W nowszych HA css nie jest na prototypie LitElement — tworzymy kompatybilną implementację
 const css = LitElement.prototype.css || function(strings, ...values) {
   const sheet = new CSSStyleSheet();
   sheet.replaceSync(strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), ""));

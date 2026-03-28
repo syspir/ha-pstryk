@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.9] - 2026-03-28
+
+### Naprawione
+- Pusty panel po ponownym dodaniu integracji — poprawiono logikę usuwania/rejestracji panelu przy unload
+- Błąd `Cannot convert undefined or null to object` przy ładowaniu panelu — asynchroniczne oczekiwanie na LitElement gdy elementy HA nie są jeszcze gotowe
+
 ## [0.4.8] - 2026-03-28
 
 ### Naprawione

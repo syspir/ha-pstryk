@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=3",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=4",
                 }
             },
             require_admin=False,
@@ -142,8 +142,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-        # Remove panel if no entries left
-        remaining = {k: v for k, v in hass.data[DOMAIN].items() if k != "panel_registered"}
+        # Remove panel if no config entries left
+        internal_keys = {"panel_registered", "static_path_registered", "last_setup_fail"}
+        remaining = {k for k in hass.data[DOMAIN] if k not in internal_keys}
         if not remaining:
             async_remove_panel(hass, PANEL_URL)
             hass.data[DOMAIN].pop("panel_registered", None)
