@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.2] - 2026-03-29
+
+### Dodane
+- Sekcja "Licznik BleBox" w panelu — wyświetlanie danych z lokalnego licznika BleBox (moc, napięcie, prąd, częstotliwość, energia, tg φ) z automatycznym odświeżaniem co 5 sekund
+
 ## [0.6.1] - 2026-03-29
 
 ### Naprawione

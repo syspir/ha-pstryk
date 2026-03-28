@@ -690,6 +690,76 @@ class PstrykPanel extends LitElement {
     `;
   }
 
+  _hasBleBox() {
+    const prefix = "sensor.pstryk_meter_";
+    return Object.keys(this.hass?.states || {}).some(e => e.startsWith(prefix));
+  }
+
+  _renderBleBoxSection() {
+    if (!this._hasBleBox()) return html``;
+    const p = "sensor.pstryk_meter_";
+    return html`
+      <div class="section-title">Licznik BleBox</div>
+      <div class="grid">
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:flash"></ha-icon>
+            Moc czynna
+          </div>
+          ${this._renderMetricIcon("mdi:sigma", "Suma", `${p}moc_czynna`)}
+          ${this._renderMetricIcon("mdi:numeric-1-circle-outline", "L1", `${p}moc_czynna_l1`)}
+          ${this._renderMetricIcon("mdi:numeric-2-circle-outline", "L2", `${p}moc_czynna_l2`)}
+          ${this._renderMetricIcon("mdi:numeric-3-circle-outline", "L3", `${p}moc_czynna_l3`)}
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:sine-wave"></ha-icon>
+            Napięcie
+          </div>
+          ${this._renderMetricIcon("mdi:numeric-1-circle-outline", "L1", `${p}napiecie_l1`)}
+          ${this._renderMetricIcon("mdi:numeric-2-circle-outline", "L2", `${p}napiecie_l2`)}
+          ${this._renderMetricIcon("mdi:numeric-3-circle-outline", "L3", `${p}napiecie_l3`)}
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:current-ac"></ha-icon>
+            Prąd
+          </div>
+          ${this._renderMetricIcon("mdi:numeric-1-circle-outline", "L1", `${p}prad_l1`)}
+          ${this._renderMetricIcon("mdi:numeric-2-circle-outline", "L2", `${p}prad_l2`)}
+          ${this._renderMetricIcon("mdi:numeric-3-circle-outline", "L3", `${p}prad_l3`)}
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:waveform"></ha-icon>
+            Sieć
+          </div>
+          ${this._renderMetricIcon("mdi:sine-wave", "Częstotliwość", `${p}czestotliwosc_sieci`)}
+          ${this._renderMetricIcon("mdi:transmission-tower-import", "Energia pobrana", `${p}energia_pobrana_licznik`)}
+          ${this._renderMetricIcon("mdi:transmission-tower-export", "Energia oddana", `${p}energia_oddana_licznik`)}
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:angle-acute"></ha-icon>
+            tg φ (chwilowe)
+          </div>
+          ${this._renderMetricIcon("mdi:arrow-right-bold", "QI", `${p}tg_ph_qi_chwilowe`)}
+          ${this._renderMetricIcon("mdi:arrow-left-bold", "QIV", `${p}tg_ph_qiv_chwilowe`)}
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:angle-acute"></ha-icon>
+            tg φ (miesiąc / rok)
+          </div>
+          ${this._renderMetricIcon("mdi:calendar-month", "QI miesiąc", `${p}tg_ph_qi_miesiac`)}
+          ${this._renderMetricIcon("mdi:calendar-month", "QIV miesiąc", `${p}tg_ph_qiv_miesiac`)}
+          ${this._renderMetricIcon("mdi:calendar", "QI rok", `${p}tg_ph_qi_rok`)}
+          ${this._renderMetricIcon("mdi:calendar", "QIV rok", `${p}tg_ph_qiv_rok`)}
+        </ha-card>
+      </div>
+    `;
+  }
+
   _renderProsumerSection() {
     const prefix = "sensor.pstryk_energy_";
     const prosumerEntity = `${prefix}cena_sprzedazy_energii_brutto`;
@@ -729,6 +799,7 @@ class PstrykPanel extends LitElement {
       ${this._renderPricingSection()}
       ${this._renderEnergySection()}
       ${this._renderCostSection()}
+      ${this._renderBleBoxSection()}
       ${this._renderProsumerSection()}
     `;
   }
