@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0] - 2026-03-28
+
+### Zmienione
+- Logo Twoje-Miasto przeniesione z footera do nagłówka panelu
+
+### Usunięte
+- Sekcja footer w panelu frontendowym
+
 ## [0.4.9] - 2026-03-28
 
 ### Naprawione
