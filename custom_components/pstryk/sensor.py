@@ -62,6 +62,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:transmission-tower-import",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "meterValues", "energy_active_import_register_total"
@@ -74,6 +75,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:transmission-tower-export",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "meterValues", "energy_active_export_register_total"
@@ -86,6 +88,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:scale-balance",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "meterValues", "energy_balance_total"
@@ -98,6 +101,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:transmission-tower-import",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "meterValues", "energy_active_import_register_total"
@@ -110,6 +114,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:transmission-tower-export",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "meterValues", "energy_active_export_register_total"
@@ -122,6 +127,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:scale-balance",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "meterValues", "energy_balance_total"
@@ -135,6 +141,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
         icon="mdi:flash",
         value_fn=lambda data: _safe_get(
             data, "current_frame", "metrics", "meterValues", "energy_active_import_register"
@@ -147,6 +154,7 @@ ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
         icon="mdi:flash-outline",
         value_fn=lambda data: _safe_get(
             data, "current_frame", "metrics", "meterValues", "energy_active_export_register"
@@ -164,6 +172,7 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_PLN,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:cash",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "cost", "total_cost_total"
@@ -181,6 +190,7 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_PLN,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:cash-multiple",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "cost", "total_cost_total"
@@ -198,6 +208,7 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_PLN,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:cash-clock",
         value_fn=lambda data: _safe_get(
             data, "current_frame", "metrics", "cost", "total_cost"
@@ -215,6 +226,7 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_PLN,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:cash-plus",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "cost", "energy_sold_value_total"
@@ -227,6 +239,7 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_PLN,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         icon="mdi:cash-plus",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "cost", "energy_sold_value_total"
@@ -243,6 +256,7 @@ CARBON_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Ślad węglowy dziś",
         native_unit_of_measurement=UNIT_GCO2,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
         icon="mdi:molecule-co2",
         value_fn=lambda data: _safe_get(
             data, "daily_summary", "carbon", "carbon_footprint_total"
@@ -254,6 +268,7 @@ CARBON_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Ślad węglowy w miesiącu",
         native_unit_of_measurement=UNIT_GCO2,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
         icon="mdi:molecule-co2",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "carbon", "carbon_footprint_total"
@@ -265,6 +280,7 @@ CARBON_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Ślad węglowy (bieżąca godzina)",
         native_unit_of_measurement=UNIT_GCO2,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         icon="mdi:leaf",
         value_fn=lambda data: _safe_get(
             data, "current_frame", "metrics", "carbon", "carbon_footprint"
@@ -281,6 +297,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Aktualna cena energii (brutto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:currency-usd",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -302,6 +319,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Aktualna cena energii (netto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:currency-usd-off",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -315,6 +333,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Średnia cena energii (brutto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:chart-line",
         coordinator_type="pricing",
         value_fn=lambda data: data.get("price_gross_avg"),
@@ -325,6 +344,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Średnia cena energii (netto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:chart-line-variant",
         coordinator_type="pricing",
         value_fn=lambda data: data.get("price_net_avg"),
@@ -351,6 +371,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Najtańsza nadchodząca cena",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:arrow-down-bold",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -368,6 +389,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Najdroższa nadchodząca cena",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:arrow-up-bold",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -386,6 +408,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Pełna cena energii (z dystrybucją)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:cash-register",
         coordinator_type="pricing",
         value_fn=lambda data: _safe_get(data, "current_price", "full_price"),
@@ -408,6 +431,7 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Cena prosumencka (brutto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:solar-power",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -421,6 +445,7 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Cena prosumencka (netto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:solar-power-variant",
         coordinator_type="pricing",
         value_fn=lambda data: (
@@ -434,6 +459,7 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Średnia cena prosumencka (brutto)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:chart-line",
         coordinator_type="pricing",
         value_fn=lambda data: data.get("prosumer_price_gross_avg"),
@@ -449,6 +475,7 @@ UNIFIED_PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         name="Cena TGE (bieżąca godzina, z metryki)",
         native_unit_of_measurement=UNIT_PLN_KWH,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:lightning-bolt",
         value_fn=lambda data: _safe_get(
             data, "current_frame", "metrics", "pricing", "price_gross"
@@ -549,7 +576,8 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
         try:
             value = self.entity_description.value_fn(self.coordinator.data)
             if value is not None and isinstance(value, (int, float)):
-                return round(value, 4)
+                precision = self.entity_description.suggested_display_precision
+                return round(value, precision if precision is not None else 4)
             return value
         except (KeyError, TypeError, IndexError):
             return None
