@@ -105,6 +105,10 @@ entities:
 - Konto Pstryk z tokenem API
 - Inteligentny licznik podłączony do Pstryk
 
+## Wyłączenie odpowiedzialności
+
+Niniejsze oprogramowanie jest udostępniane w stanie „takim, jakie jest" (_AS IS_), bez jakiejkolwiek gwarancji, wyraźnej ani dorozumianej. Twoje-Miasto Sp. z o.o. nie ponosi odpowiedzialności za jakiekolwiek szkody bezpośrednie, pośrednie, przypadkowe, szczególne ani wynikowe powstałe w związku z korzystaniem z tego oprogramowania. Użytkownik korzysta z integracji na własne ryzyko.
+
 ## Licencja
 
-MIT
+MIT — Copyright (c) 2026 Twoje-Miasto Sp. z o.o.
