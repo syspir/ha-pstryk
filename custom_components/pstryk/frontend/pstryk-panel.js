@@ -223,7 +223,6 @@ class PstrykPanel extends LitElement {
           ${this._renderMetric("Energia pobrana", `${prefix}energy_import_current_hour`)}
           ${this._renderMetric("Energia oddana", `${prefix}energy_export_current_hour`)}
           ${this._renderMetric("Koszt", `${prefix}cost_current_hour`)}
-          ${this._renderMetric("Ślad węglowy", `${prefix}carbon_footprint_current_hour`)}
           ${this._renderMetric("Cena TGE", `${prefix}unified_price_current_hour`)}
         </ha-card>
       </div>
@@ -277,29 +276,6 @@ class PstrykPanel extends LitElement {
           </div>
           ${this._renderMetric("Koszt energii", `${prefix}total_cost_month`)}
           ${this._renderMetric("Wartość sprzedanej", `${prefix}energy_sold_value_month`)}
-        </ha-card>
-      </div>
-    `;
-  }
-
-  _renderCarbonSection() {
-    const prefix = "sensor.pstryk_energy_";
-    return html`
-      <div class="section-title">Ślad węglowy (CO2)</div>
-      <div class="grid">
-        <ha-card>
-          <div class="card-header">
-            <ha-icon icon="mdi:molecule-co2"></ha-icon>
-            Dziś
-          </div>
-          ${this._renderMetric("Emisja CO2", `${prefix}carbon_footprint_today`)}
-        </ha-card>
-        <ha-card>
-          <div class="card-header">
-            <ha-icon icon="mdi:molecule-co2"></ha-icon>
-            Miesiąc
-          </div>
-          ${this._renderMetric("Emisja CO2", `${prefix}carbon_footprint_month`)}
         </ha-card>
       </div>
     `;
@@ -394,7 +370,6 @@ class PstrykPanel extends LitElement {
       ${this._renderLiveSection()}
       ${this._renderEnergySection()}
       ${this._renderCostSection()}
-      ${this._renderCarbonSection()}
       ${this._renderPricingSection()}
       ${this._renderProsumerSection()}
     `;

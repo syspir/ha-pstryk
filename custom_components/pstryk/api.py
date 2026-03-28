@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -13,10 +14,9 @@ import aiohttp
 
 from .const import (
     ALL_METRICS,
-    API_BASE_URL,
+    API_DATE_FORMAT,
     PRICING_URL,
     PROSUMER_PRICING_URL,
-    RESOLUTION_DAY,
     RESOLUTION_HOUR,
     RESOLUTION_MONTH,
     UNIFIED_METRICS_URL,
@@ -56,13 +56,21 @@ class PstrykApiClient:
         }
 
     async def _request(
-        self, url: str, params: dict[str, Any] | None = None
+        self, url: str, params: dict[str, Any] | None = None, _retry: int = 0
     ) -> dict[str, Any]:
         """Make an authenticated request to the API."""
+        max_retries = 3
         try:
             async with self._session.get(
                 url, headers=self._headers, params=params, timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
+                if response.status == 429:
+                    if _retry < max_retries:
+                        retry_after = int(response.headers.get("Retry-After", 5))
+                        _LOGGER.warning("Rate limited (429), retry %s/%s after %ss", _retry + 1, max_retries, retry_after)
+                        await asyncio.sleep(retry_after)
+                        return await self._request(url, params, _retry + 1)
+                    raise PstrykApiError("Rate limited (429) - too many requests")
                 if response.status == 401:
                     raise PstrykAuthError("Invalid API token")
                 if response.status == 403:
@@ -82,9 +90,9 @@ class PstrykApiClient:
         now = datetime.now(timezone.utc)
         params = {
             "metrics": "meter_values",
-            "resolution": RESOLUTION_DAY,
-            "window_start": (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "window_end": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "resolution": "day",
+            "window_start": (now - timedelta(days=1)).strftime(API_DATE_FORMAT),
+            "window_end": now.strftime(API_DATE_FORMAT),
         }
         try:
             await self._request(UNIFIED_METRICS_URL, params)
@@ -92,140 +100,60 @@ class PstrykApiClient:
         except PstrykAuthError:
             return False
 
-    async def get_unified_metrics(
+    async def _get_metrics(
         self,
-        metrics: str = ALL_METRICS,
-        resolution: str = RESOLUTION_HOUR,
-        window_start: datetime | None = None,
-        window_end: datetime | None = None,
+        resolution: str,
+        window_start: datetime,
+        window_end: datetime,
         for_tz: str | None = None,
     ) -> dict[str, Any]:
-        """Fetch unified metrics from the API.
-
-        Args:
-            metrics: Comma-separated list: meter_values,cost,carbon,pricing
-            resolution: hour, day, or month
-            window_start: Start of time window (UTC)
-            window_end: End of time window (UTC, defaults to now)
-            for_tz: Timezone for aggregation (cannot combine with hour resolution)
-        """
-        now = datetime.now(timezone.utc)
-        if window_start is None:
-            window_start = now - timedelta(hours=24)
-        if window_end is None:
-            window_end = now
-
+        """Fetch unified metrics from the API."""
         params: dict[str, str] = {
-            "metrics": metrics,
+            "metrics": ALL_METRICS,
             "resolution": resolution,
-            "window_start": window_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "window_end": window_end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "window_start": window_start.strftime(API_DATE_FORMAT),
+            "window_end": window_end.strftime(API_DATE_FORMAT),
         }
-
-        # for_tz cannot be combined with hour resolution
         if for_tz and resolution != RESOLUTION_HOUR:
             params["for_tz"] = for_tz
-
         return await self._request(UNIFIED_METRICS_URL, params)
 
-    async def get_pricing(
-        self,
-        resolution: str = RESOLUTION_HOUR,
-        window_start: datetime | None = None,
-        window_end: datetime | None = None,
-        for_tz: str | None = None,
-    ) -> dict[str, Any]:
-        """Fetch TGE pricing data."""
-        now = datetime.now(timezone.utc)
-        if window_start is None:
-            window_start = now - timedelta(hours=24)
-        if window_end is None:
-            window_end = now + timedelta(days=1)
-
-        params: dict[str, str] = {
-            "resolution": resolution,
-            "window_start": window_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "window_end": window_end.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        }
-
-        if for_tz and resolution != RESOLUTION_HOUR:
-            params["for_tz"] = for_tz
-
-        return await self._request(PRICING_URL, params)
-
-    async def get_prosumer_pricing(
-        self,
-        resolution: str = RESOLUTION_HOUR,
-        window_start: datetime | None = None,
-        window_end: datetime | None = None,
-        for_tz: str | None = None,
-    ) -> dict[str, Any]:
-        """Fetch prosumer pricing data."""
-        now = datetime.now(timezone.utc)
-        if window_start is None:
-            window_start = now - timedelta(hours=24)
-        if window_end is None:
-            window_end = now + timedelta(days=1)
-
-        params: dict[str, str] = {
-            "resolution": resolution,
-            "window_start": window_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "window_end": window_end.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        }
-
-        if for_tz and resolution != RESOLUTION_HOUR:
-            params["for_tz"] = for_tz
-
-        return await self._request(PROSUMER_PRICING_URL, params)
-
-    async def get_daily_metrics(self, for_tz: str | None = None) -> dict[str, Any]:
-        """Get today's metrics aggregated by day."""
+    async def get_hourly_metrics(self) -> dict[str, Any]:
+        """Get today's metrics with hourly resolution (includes summary)."""
         now = datetime.now(timezone.utc)
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        return await self.get_unified_metrics(
-            metrics=ALL_METRICS,
-            resolution=RESOLUTION_DAY,
-            window_start=start_of_day,
-            window_end=now,
-            for_tz=for_tz,
-        )
+        return await self._get_metrics(RESOLUTION_HOUR, start_of_day, now)
 
     async def get_monthly_metrics(self, for_tz: str | None = None) -> dict[str, Any]:
         """Get this month's metrics aggregated by month."""
         now = datetime.now(timezone.utc)
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        return await self.get_unified_metrics(
-            metrics=ALL_METRICS,
-            resolution=RESOLUTION_MONTH,
-            window_start=start_of_month,
-            window_end=now,
-            for_tz=for_tz,
-        )
+        return await self._get_metrics(RESOLUTION_MONTH, start_of_month, now, for_tz)
 
-    async def get_hourly_metrics(self) -> dict[str, Any]:
-        """Get last 24h metrics with hourly resolution."""
-        now = datetime.now(timezone.utc)
-        return await self.get_unified_metrics(
-            metrics=ALL_METRICS,
-            resolution=RESOLUTION_HOUR,
-            window_start=now - timedelta(hours=24),
-            window_end=now,
-        )
+    async def _get_pricing_data(
+        self,
+        url: str,
+        window_start: datetime,
+        window_end: datetime,
+    ) -> dict[str, Any]:
+        """Fetch pricing data from the API."""
+        params: dict[str, str] = {
+            "resolution": RESOLUTION_HOUR,
+            "window_start": window_start.strftime(API_DATE_FORMAT),
+            "window_end": window_end.strftime(API_DATE_FORMAT),
+        }
+        return await self._request(url, params)
 
     async def get_current_pricing(self) -> dict[str, Any]:
         """Get pricing for next 24h (hourly)."""
         now = datetime.now(timezone.utc)
-        return await self.get_pricing(
-            resolution=RESOLUTION_HOUR,
-            window_start=now - timedelta(hours=1),
-            window_end=now + timedelta(hours=24),
+        return await self._get_pricing_data(
+            PRICING_URL, now - timedelta(hours=1), now + timedelta(hours=24)
         )
 
     async def get_current_prosumer_pricing(self) -> dict[str, Any]:
         """Get prosumer pricing for next 24h (hourly)."""
         now = datetime.now(timezone.utc)
-        return await self.get_prosumer_pricing(
-            resolution=RESOLUTION_HOUR,
-            window_start=now - timedelta(hours=1),
-            window_end=now + timedelta(hours=24),
+        return await self._get_pricing_data(
+            PROSUMER_PRICING_URL, now - timedelta(hours=1), now + timedelta(hours=24)
         )

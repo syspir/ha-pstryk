@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator for unified metrics data (energy, cost, carbon)."""
+    """Coordinator for unified metrics data (energy, cost)."""
 
     def __init__(
         self,
@@ -40,12 +40,10 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.attribution = ATTRIBUTION
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch metrics data from API."""
+        """Fetch metrics data from API (2 requests: hourly + monthly)."""
         try:
-            # Get daily and monthly aggregates plus hourly detail
-            daily = await self.client.get_daily_metrics(for_tz=self.timezone)
-            monthly = await self.client.get_monthly_metrics(for_tz=self.timezone)
             hourly = await self.client.get_hourly_metrics()
+            monthly = await self.client.get_monthly_metrics(for_tz=self.timezone)
 
             # Find the current "live" frame from hourly data
             current_frame = None
@@ -54,16 +52,14 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     if frame.get("is_live"):
                         current_frame = frame
                         break
-                # Fallback to last frame if no live frame found
                 if current_frame is None:
                     current_frame = hourly["frames"][-1]
 
             return {
-                "daily": daily,
-                "monthly": monthly,
                 "hourly": hourly,
+                "monthly": monthly,
                 "current_frame": current_frame,
-                "daily_summary": daily.get("summary", {}),
+                "daily_summary": hourly.get("summary", {}),
                 "monthly_summary": monthly.get("summary", {}),
             }
         except PstrykAuthError as err:
@@ -98,7 +94,6 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             pricing = await self.client.get_current_pricing()
 
-            # Find current live price frame
             current_price = None
             next_prices: list[dict] = []
             cheapest_upcoming = None
@@ -117,7 +112,6 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if not current_price and pricing["frames"]:
                     current_price = pricing["frames"][-1]
 
-                # Find cheapest and most expensive upcoming
                 if next_prices:
                     cheapest_upcoming = min(
                         next_prices,
@@ -138,7 +132,6 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "price_gross_avg": pricing.get("price_gross_avg"),
             }
 
-            # Prosumer pricing
             if self.is_prosumer:
                 prosumer = await self.client.get_current_prosumer_pricing()
                 prosumer_current = None

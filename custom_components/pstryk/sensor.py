@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CURRENCY_PLN = "PLN"
 UNIT_PLN_KWH = "PLN/kWh"
-UNIT_GCO2 = "gCO2eq"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -246,47 +245,6 @@ COST_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         icon="mdi:cash-plus",
         value_fn=lambda data: _safe_get(
             data, "monthly_summary", "cost", "energy_sold_value_total"
-        ),
-    ),
-)
-
-# ──────────── Carbon Footprint Sensors ────────────
-
-CARBON_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
-    PstrykSensorEntityDescription(
-        key="carbon_footprint_today",
-        translation_key="carbon_footprint_today",
-        name="Ślad węglowy dziś",
-        native_unit_of_measurement=UNIT_GCO2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=0,
-        icon="mdi:molecule-co2",
-        value_fn=lambda data: _safe_get(
-            data, "daily_summary", "carbon", "carbon_footprint_total"
-        ),
-    ),
-    PstrykSensorEntityDescription(
-        key="carbon_footprint_month",
-        translation_key="carbon_footprint_month",
-        name="Ślad węglowy w miesiącu",
-        native_unit_of_measurement=UNIT_GCO2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=0,
-        icon="mdi:molecule-co2",
-        value_fn=lambda data: _safe_get(
-            data, "monthly_summary", "carbon", "carbon_footprint_total"
-        ),
-    ),
-    PstrykSensorEntityDescription(
-        key="carbon_footprint_current_hour",
-        translation_key="carbon_footprint_current_hour",
-        name="Ślad węglowy (bieżąca godzina)",
-        native_unit_of_measurement=UNIT_GCO2,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        icon="mdi:leaf",
-        value_fn=lambda data: _safe_get(
-            data, "current_frame", "metrics", "carbon", "carbon_footprint"
         ),
     ),
 )
@@ -513,12 +471,6 @@ async def async_setup_entry(
 
     # Add cost sensors
     for description in COST_SENSORS:
-        entities.append(
-            PstrykSensorEntity(metrics_coordinator, description, entry)
-        )
-
-    # Add carbon sensors
-    for description in CARBON_SENSORS:
         entities.append(
             PstrykSensorEntity(metrics_coordinator, description, entry)
         )
