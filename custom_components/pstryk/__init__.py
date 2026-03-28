@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from homeassistant.components.frontend import async_register_built_in_panel, async_remove_panel
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -52,7 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 StaticPathConfig("/pstryk_panel", str(panel_path), cache_headers=True)
             ])
             hass.data[DOMAIN]["static_path_registered"] = True
-        hass.components.frontend.async_register_panel(
+        async_register_built_in_panel(
+            hass,
             component_name="custom",
             sidebar_title=PANEL_TITLE,
             sidebar_icon=PANEL_ICON,
@@ -67,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         hass.data[DOMAIN]["panel_registered"] = True
     elif not enable_panel and "panel_registered" in hass.data[DOMAIN]:
-        hass.components.frontend.async_remove_panel(PANEL_URL)
+        async_remove_panel(hass, PANEL_URL)
         hass.data[DOMAIN].pop("panel_registered", None)
 
     # Throttle: don't retry setup more often than every 15 min
@@ -143,6 +145,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Remove panel if no entries left
         remaining = {k: v for k, v in hass.data[DOMAIN].items() if k != "panel_registered"}
         if not remaining:
-            hass.components.frontend.async_remove_panel(PANEL_URL)
+            async_remove_panel(hass, PANEL_URL)
             hass.data[DOMAIN].pop("panel_registered", None)
     return unload_ok

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.4] - 2026-03-28
+
+### Naprawione
+- Kompatybilność z nowszymi wersjami HA — bezpośredni import funkcji panelu zamiast usuniętego `hass.components`
+
 ## [0.4.3] - 2026-03-28
 
 ### Naprawione
