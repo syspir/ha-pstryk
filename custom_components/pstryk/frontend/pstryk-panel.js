@@ -405,4 +405,6 @@ class PstrykPanel extends LitElement {
   }
 }
 
-customElements.define("pstryk-panel", PstrykPanel);
+if (!customElements.get("pstryk-panel")) {
+  customElements.define("pstryk-panel", PstrykPanel);
+}

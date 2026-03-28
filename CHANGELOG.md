@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.8] - 2026-03-28
+
+### Naprawione
+- Błąd podwójnej rejestracji custom elementu `pstryk-panel` przy nawigacji w HA
+- Nieprawidłowy `state_class` dla sensorów energii — bilans (dziś/miesiąc) nie wymusza już `device_class: energy`, sensory godzinowe używają `total` zamiast `measurement`
+
 ## [0.4.7] - 2026-03-28
 
 ### Zmienione
