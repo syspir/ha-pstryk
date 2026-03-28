@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -82,11 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if enable_panel and "panel_registered" not in hass.data[DOMAIN]:
         if "static_path_registered" not in hass.data[DOMAIN]:
             panel_path = Path(__file__).parent / "frontend"
-            hass.http.register_static_path(
-                "/pstryk_panel",
-                str(panel_path),
-                cache_headers=False,
-            )
+            await hass.http.async_register_static_paths([
+                StaticPathConfig("/pstryk_panel", str(panel_path), cache_headers=True)
+            ])
             hass.data[DOMAIN]["static_path_registered"] = True
         hass.components.frontend.async_register_panel(
             component_name="custom",

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2026-03-28
+
+### Naprawione
+- Rejestracja ścieżki statycznej panelu — użycie async_register_static_paths z StaticPathConfig (kompatybilność z nowszymi wersjami HA)
+- Sensory kosztowe — state_class zmieniony z TOTAL_INCREASING/MEASUREMENT na TOTAL (wymagane dla device_class MONETARY)
+
 ## [0.3.0] - 2026-03-28
 
 ### Dodane
