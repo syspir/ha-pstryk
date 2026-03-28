@@ -65,6 +65,9 @@ class PstrykMetricsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except PstrykAuthError as err:
             raise UpdateFailed(f"Authentication error: {err}") from err
         except PstrykApiError as err:
+            if self.data:
+                _LOGGER.warning("Metrics API error, keeping last data: %s", err)
+                return self.data
             raise UpdateFailed(f"API error: {err}") from err
 
 
@@ -152,4 +155,7 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except PstrykAuthError as err:
             raise UpdateFailed(f"Authentication error: {err}") from err
         except PstrykApiError as err:
+            if self.data:
+                _LOGGER.warning("Pricing API error, keeping last data: %s", err)
+                return self.data
             raise UpdateFailed(f"API error: {err}") from err

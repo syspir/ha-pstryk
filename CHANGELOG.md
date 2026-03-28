@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.2] - 2026-03-28
+
+### Zmienione
+- Interwał odświeżania cen TGE zmniejszony z 60 do 45 minut
+- Poprawiono URL logo Pstryk w nagłówku panelu
+
+### Naprawione
+- Koordynatory zachowują ostatnie dane przy błędach API (np. 429 rate limit) zamiast ustawiać sensory na `unknown`
+
 ## [0.5.1] - 2026-03-28
 
 ### Dodane

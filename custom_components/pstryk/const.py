@@ -26,7 +26,7 @@ DEFAULT_NAME = "Pstryk"
 
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)
-UPDATE_INTERVAL_PRICING = timedelta(minutes=60)
+UPDATE_INTERVAL_PRICING = timedelta(minutes=45)
 
 # Metrics
 METRIC_METER_VALUES = "meter_values"

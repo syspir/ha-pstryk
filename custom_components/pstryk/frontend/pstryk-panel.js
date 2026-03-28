@@ -414,7 +414,7 @@ class PstrykPanel extends LitElement {
         Pstryk Energy
         <div class="header-logos">
           <a class="header-logo" href="https://pstryk.pl" target="_blank" rel="noopener noreferrer">
-            <img src="https://pstryk.pl/img/logo.svg" alt="Pstryk">
+            <img src="https://images.prismic.io/pstryk/aDiD4idWJ-7kSsSG_pstryk_logo.webp?auto=format,compress" alt="Pstryk">
           </a>
           <a class="header-logo" href="https://www.twoje-miasto.pl" target="_blank" rel="noopener noreferrer">
             <img src="https://im.twoje-miasto.pl/theme/1/images/logo.png" alt="Twoje-Miasto">
