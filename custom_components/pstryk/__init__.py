@@ -6,15 +6,16 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import PstrykApiClient
+from .api import PstrykApiClient, PstrykApiError
 from .const import (
     CONF_API_TOKEN,
     CONF_ENABLE_PANEL,
@@ -34,10 +35,20 @@ from .coordinator import PstrykMetricsCoordinator, PstrykPricingCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+SETUP_RETRY_INTERVAL = timedelta(minutes=15)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pstryk Energy from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Throttle: don't retry setup more often than every 15 min
+    last_fail = hass.data[DOMAIN].get("last_setup_fail")
+    if last_fail and datetime.now(timezone.utc) - last_fail < SETUP_RETRY_INTERVAL:
+        remaining = SETUP_RETRY_INTERVAL - (datetime.now(timezone.utc) - last_fail)
+        raise ConfigEntryNotReady(
+            f"Rate limit cooldown, retry in {int(remaining.total_seconds())}s"
+        )
 
     session = async_get_clientsession(hass)
     api_token = entry.data[CONF_API_TOKEN]
@@ -65,9 +76,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         is_prosumer=is_prosumer,
     )
 
-    # Fetch initial data
-    await metrics_coordinator.async_config_entry_first_refresh()
-    await pricing_coordinator.async_config_entry_first_refresh()
+    # Fetch initial data — on failure, retry no sooner than 15 min
+    try:
+        await metrics_coordinator.async_config_entry_first_refresh()
+        await pricing_coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        hass.data[DOMAIN]["last_setup_fail"] = datetime.now(timezone.utc)
+        raise ConfigEntryNotReady(
+            f"Failed to fetch initial data: {err}"
+        ) from err
+
+    hass.data[DOMAIN].pop("last_setup_fail", None)
 
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2] - 2026-03-28
+
+### Naprawione
+- Ograniczenie ponownych prób konfiguracji do minimum raz na 15 minut (zapobiega zalewaniu API przy błędach)
+
 ## [0.4.1] - 2026-03-28
 
 ### Zmienione
