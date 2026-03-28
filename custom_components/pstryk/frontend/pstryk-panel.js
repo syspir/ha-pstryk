@@ -159,6 +159,23 @@ class PstrykPanel extends LitElement {
       .live-card .price-time {
         color: rgba(255,255,255,0.7);
       }
+      .footer {
+        display: flex;
+        justify-content: center;
+        padding: 24px 0 8px;
+        margin-top: 16px;
+        border-top: 1px solid var(--divider-color);
+      }
+      .footer a {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+      .footer a:hover {
+        opacity: 1;
+      }
+      .footer img {
+        height: 32px;
+      }
       @media (max-width: 600px) {
         :host { padding: 8px; }
         .grid { grid-template-columns: 1fr; }
@@ -379,6 +396,11 @@ class PstrykPanel extends LitElement {
       ${this._renderCostSection()}
       ${this._renderPricingSection()}
       ${this._renderProsumerSection()}
+      <div class="footer">
+        <a href="https://www.twoje-miasto.pl" target="_blank" rel="noopener noreferrer">
+          <img src="https://im.twoje-miasto.pl/theme/1/images/logo.png" alt="Twoje-Miasto">
+        </a>
+      </div>
     `;
   }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.6] - 2026-03-28
+
+### Dodane
+- Logo Twoje-Miasto z linkiem w stopce panelu frontendowego
+
 ## [0.4.5] - 2026-03-28
 
 ### Naprawione
