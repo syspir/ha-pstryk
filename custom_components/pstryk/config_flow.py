@@ -94,7 +94,7 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): str,
                     vol.Optional(
                         CONF_SCAN_INTERVAL_MINUTES, default=DEFAULT_SCAN_INTERVAL
-                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=15, max=120)),
                 }
             ),
             errors=errors,
@@ -138,7 +138,7 @@ class PstrykOptionsFlow(OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=15, max=120)),
                 }
             ),
         )
