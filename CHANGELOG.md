@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1] - 2026-03-29
+
+### Naprawione
+- Błąd 500 w options flow — usunięto ręczne ustawianie config_entry w konstruktorze PstrykOptionsFlow (niezgodne z nowym HA, gdzie OptionsFlow dostarcza config_entry automatycznie)
+
 ## [0.6.0] - 2026-03-29
 
 ### Dodane
