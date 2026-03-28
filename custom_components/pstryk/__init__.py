@@ -164,9 +164,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # 1-minute tick to recalculate current price frame (no API call)
+    async def _tick_recalculate(_now) -> None:
+        pricing_coordinator.recalculate_current()
+
     cancel_tick = async_track_time_interval(
         hass,
-        lambda _: pricing_coordinator.recalculate_current(),
+        _tick_recalculate,
         timedelta(minutes=1),
     )
     entry.async_on_unload(cancel_tick)
