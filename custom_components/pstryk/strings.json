@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konfiguracja Pstryk Energy",
+        "description": "Podaj token API z panelu Pstryk (https://app.pstryk.pl).",
+        "data": {
+          "api_token": "Token API",
+          "is_prosumer": "Jestem prosumentem (fotowoltaika)",
+          "timezone": "Strefa czasowa",
+          "scan_interval": "Interwał odświeżania (minuty)"
+        },
+        "data_description": {
+          "api_token": "Token autoryzacyjny z panelu Pstryk (format: sk-...)",
+          "is_prosumer": "Zaznacz jeśli posiadasz instalację fotowoltaiczną i oddajesz energię do sieci",
+          "timezone": "Strefa czasowa do agregacji danych",
+          "scan_interval": "Jak często pobierać dane (domyślnie co 15 minut)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie można połączyć z API Pstryk",
+      "invalid_auth": "Nieprawidłowy token API",
+      "unknown": "Nieoczekiwany błąd"
+    },
+    "abort": {
+      "already_configured": "Integracja Pstryk jest już skonfigurowana"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Pstryk Energy",
+        "data": {
+          "scan_interval": "Interwał odświeżania (minuty)",
+          "is_prosumer": "Jestem prosumentem (fotowoltaika)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Pstryk Energy",
+        "description": "Enter your API token from the Pstryk panel (https://app.pstryk.pl).",
+        "data": {
+          "api_token": "API Token",
+          "is_prosumer": "I am a prosumer (solar panels)",
+          "timezone": "Timezone",
+          "scan_interval": "Update interval (minutes)"
+        },
+        "data_description": {
+          "api_token": "Authorization token from Pstryk panel (format: sk-...)",
+          "is_prosumer": "Check if you have a solar installation and feed energy to the grid",
+          "timezone": "Timezone for data aggregation",
+          "scan_interval": "How often to fetch data (default: every 15 minutes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Pstryk API",
+      "invalid_auth": "Invalid API token",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Pstryk integration is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pstryk Energy Options",
+        "data": {
+          "scan_interval": "Update interval (minutes)",
+          "is_prosumer": "I am a prosumer (solar panels)"
+        }
+      }
+    }
+  }
+}
