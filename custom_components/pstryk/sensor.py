@@ -297,6 +297,138 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
             ],
         },
     ),
+    PstrykSensorEntityDescription(
+        key="current_price_gross",
+        translation_key="current_price_gross",
+        name="Aktualna cena energii (brutto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:currency-usd",
+        coordinator_type="pricing",
+        value_fn=lambda data: (
+            _safe_get(data, "current_price", "price_gross")
+            or _safe_get(data, "current_price", "price_gross_avg")
+        ),
+        extra_attrs_fn=lambda data: {
+            "price_net": _safe_get(data, "current_price", "price_net") or _safe_get(data, "current_price", "price_net_avg"),
+            "is_cheap": _safe_get(data, "current_price", "is_cheap"),
+            "is_expensive": _safe_get(data, "current_price", "is_expensive"),
+            "is_live": _safe_get(data, "current_price", "is_live"),
+            "start": _safe_get(data, "current_price", "start"),
+            "end": _safe_get(data, "current_price", "end"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="current_price_net",
+        translation_key="current_price_net",
+        name="Aktualna cena energii (netto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:currency-usd-off",
+        coordinator_type="pricing",
+        value_fn=lambda data: (
+            _safe_get(data, "current_price", "price_net")
+            or _safe_get(data, "current_price", "price_net_avg")
+        ),
+    ),
+    PstrykSensorEntityDescription(
+        key="avg_price_gross",
+        translation_key="avg_price_gross",
+        name="Średnia cena energii (brutto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:chart-line",
+        coordinator_type="pricing",
+        value_fn=lambda data: data.get("price_gross_avg"),
+    ),
+    PstrykSensorEntityDescription(
+        key="avg_price_net",
+        translation_key="avg_price_net",
+        name="Średnia cena energii (netto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:chart-line-variant",
+        coordinator_type="pricing",
+        value_fn=lambda data: data.get("price_net_avg"),
+    ),
+    PstrykSensorEntityDescription(
+        key="is_cheap_now",
+        translation_key="is_cheap_now",
+        name="Tania energia teraz",
+        icon="mdi:thumb-up",
+        coordinator_type="pricing",
+        value_fn=lambda data: _safe_get(data, "current_price", "is_cheap"),
+    ),
+    PstrykSensorEntityDescription(
+        key="is_expensive_now",
+        translation_key="is_expensive_now",
+        name="Droga energia teraz",
+        icon="mdi:thumb-down",
+        coordinator_type="pricing",
+        value_fn=lambda data: _safe_get(data, "current_price", "is_expensive"),
+    ),
+    PstrykSensorEntityDescription(
+        key="cheapest_upcoming_price",
+        translation_key="cheapest_upcoming_price",
+        name="Najtańsza nadchodząca cena",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-down-bold",
+        coordinator_type="pricing",
+        value_fn=lambda data: (
+            _safe_get(data, "cheapest_upcoming", "full_price")
+            or _safe_get(data, "cheapest_upcoming", "price_gross")
+        ),
+        extra_attrs_fn=lambda data: {
+            "start": _safe_get(data, "cheapest_upcoming", "start"),
+            "end": _safe_get(data, "cheapest_upcoming", "end"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="most_expensive_upcoming_price",
+        translation_key="most_expensive_upcoming_price",
+        name="Najdroższa nadchodząca cena",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-up-bold",
+        coordinator_type="pricing",
+        value_fn=lambda data: (
+            _safe_get(data, "most_expensive_upcoming", "full_price")
+            or _safe_get(data, "most_expensive_upcoming", "price_gross")
+        ),
+        extra_attrs_fn=lambda data: {
+            "start": _safe_get(data, "most_expensive_upcoming", "start"),
+            "end": _safe_get(data, "most_expensive_upcoming", "end"),
+        },
+    ),
+)
+
+# ──────────── Unified Metrics Pricing Sensors ────────────
+
+UNIFIED_PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
+    PstrykSensorEntityDescription(
+        key="unified_price_current_hour",
+        translation_key="unified_price_current_hour",
+        name="Cena TGE (bieżąca godzina)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:lightning-bolt",
+        value_fn=lambda data: _safe_get(
+            data, "current_frame", "metrics", "pricing", "price_gross"
+        ),
+        extra_attrs_fn=lambda data: {
+            "price_net": _safe_get(data, "current_frame", "metrics", "pricing", "price_net"),
+            "is_cheap": _safe_get(data, "current_frame", "metrics", "pricing", "is_cheap"),
+            "is_expensive": _safe_get(data, "current_frame", "metrics", "pricing", "is_expensive"),
+        },
+    ),
 )
 
 # ──────────── Prosumer Pricing Sensors ────────────
@@ -320,6 +452,31 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
             "start": _safe_get(data, "prosumer_current_price", "start"),
             "end": _safe_get(data, "prosumer_current_price", "end"),
         },
+    ),
+    PstrykSensorEntityDescription(
+        key="prosumer_price_net",
+        translation_key="prosumer_price_net",
+        name="Cena sprzedaży energii (netto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:solar-power-variant",
+        coordinator_type="pricing",
+        value_fn=lambda data: (
+            _safe_get(data, "prosumer_current_price", "price_net")
+            or _safe_get(data, "prosumer_current_price", "price_net_avg")
+        ),
+    ),
+    PstrykSensorEntityDescription(
+        key="prosumer_avg_price_gross",
+        translation_key="prosumer_avg_price_gross",
+        name="Średnia cena prosumencka (brutto)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:chart-line",
+        coordinator_type="pricing",
+        value_fn=lambda data: data.get("prosumer_price_gross_avg"),
     ),
 )
 
@@ -633,6 +790,12 @@ async def async_setup_entry(
     for description in PRICING_SENSORS:
         entities.append(
             PstrykSensorEntity(pricing_coordinator, description, entry)
+        )
+
+    # Add unified metrics pricing sensors
+    for description in UNIFIED_PRICING_SENSORS:
+        entities.append(
+            PstrykSensorEntity(metrics_coordinator, description, entry)
         )
 
     # Add prosumer sensors if enabled

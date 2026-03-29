@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.4] - 2026-03-29
+
+### Dodane
+- Przywrócenie sensorów cenowych jako osobne encje: aktualna cena brutto/netto, średnia brutto/netto, tania/droga energia teraz, najtańsza/najdroższa nadchodząca cena, cena TGE z metryki
+- Przywrócenie sensorów prosumenckich: cena netto, średnia cena brutto
+
 ## [0.6.3] - 2026-03-29
 
 ### Naprawione
