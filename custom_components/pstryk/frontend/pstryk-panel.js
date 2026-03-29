@@ -229,6 +229,12 @@ class PstrykPanel extends LitElement {
         color: var(--secondary-text-color);
         margin-top: 2px;
       }
+      .empty-message {
+        padding: 24px 16px;
+        text-align: center;
+        color: var(--secondary-text-color);
+        font-size: 14px;
+      }
       .chart-container {
         position: relative;
         width: 100%;
@@ -454,7 +460,18 @@ class PstrykPanel extends LitElement {
     const forecast = this._getAttr(priceEntity, "price_forecast");
 
     if (!forecast || !forecast.length) {
-      return html``;
+      return html`
+        <div class="section-title">Prognoza cen</div>
+        <div class="grid-full">
+          <ha-card>
+            <div class="card-header">
+              <ha-icon icon="mdi:chart-bar"></ha-icon>
+              Ceny godzinowe (zakup brutto)
+            </div>
+            <div class="empty-message">Brak danych o prognozach cen</div>
+          </ha-card>
+        </div>
+      `;
     }
 
     // Group frames by day
@@ -475,7 +492,20 @@ class PstrykPanel extends LitElement {
         };
       });
 
-    if (!frames.length) return html``;
+    if (!frames.length) {
+      return html`
+        <div class="section-title">Prognoza cen</div>
+        <div class="grid-full">
+          <ha-card>
+            <div class="card-header">
+              <ha-icon icon="mdi:chart-bar"></ha-icon>
+              Ceny godzinowe (zakup brutto)
+            </div>
+            <div class="empty-message">Brak danych o prognozach cen</div>
+          </ha-card>
+        </div>
+      `;
+    }
 
     const prices = frames.map(f => f.price);
     const minPrice = Math.min(...prices);

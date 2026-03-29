@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.5] - 2026-03-29
+
+### Naprawione
+- Sekcja "Prognoza cen" w panelu — zamiast znikać przy braku danych, wyświetla komunikat "Brak danych o prognozach cen"
+
 ## [0.6.4] - 2026-03-29
 
 ### Dodane
