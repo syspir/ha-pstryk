@@ -29,6 +29,7 @@ async function _waitForLitElement() {
 const LitElement = _getLitElement() || await _waitForLitElement();
 
 const html = LitElement.prototype.html;
+const svg = LitElement.prototype.svg || html;
 
 const css = LitElement.prototype.css || function(strings, ...values) {
   const sheet = new CSSStyleSheet();
@@ -583,28 +584,28 @@ class PstrykPanel extends LitElement {
             <svg class="chart-svg" viewBox="0 0 ${svgW} ${chartH}" preserveAspectRatio="none">
               <!-- grid lines -->
               <line x1="${padLeft}" y1="${padTop}" x2="${svgW - padRight}" y2="${padTop}"
-                    stroke="var(--divider-color)" stroke-width="0.3" stroke-dasharray="2,2"/>
+                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3" stroke-dasharray="2,2"/>
               <line x1="${padLeft}" y1="${padTop + barAreaH / 2}" x2="${svgW - padRight}" y2="${padTop + barAreaH / 2}"
-                    stroke="var(--divider-color)" stroke-width="0.3" stroke-dasharray="2,2"/>
+                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3" stroke-dasharray="2,2"/>
               <line x1="${padLeft}" y1="${padTop + barAreaH}" x2="${svgW - padRight}" y2="${padTop + barAreaH}"
-                    stroke="var(--divider-color)" stroke-width="0.3"/>
+                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3"/>
 
               <!-- price labels -->
               <text x="${svgW - 1}" y="${padTop + 3}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color)">${priceLabelMax}</text>
+                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMax}</text>
               <text x="${svgW - 1}" y="${padTop + barAreaH / 2 + 1.5}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color)">${priceLabelMid}</text>
+                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMid}</text>
               <text x="${svgW - 1}" y="${padTop + barAreaH - 1}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color)">${priceLabelMin}</text>
+                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMin}</text>
 
               <!-- bars -->
-              ${bars.map(b => html`
+              ${bars.map(b => svg`
                 <rect x="${b.x}" y="${b.y}" width="${b.barW}" height="${b.barH}"
                       fill="${b.color}" rx="0.5"
                       opacity="${b.frame.isCurrent ? 1 : 0.8}">
                   <title>${b.frame.hour}:00 — ${b.frame.price.toFixed(4)} PLN/kWh</title>
                 </rect>
-                ${b.frame.isCurrent ? html`
+                ${b.frame.isCurrent ? svg`
                   <rect x="${b.x - 0.3}" y="${b.y - 1}" width="${b.barW + 0.6}" height="${b.barH + 2}"
                         fill="none" stroke="var(--primary-text-color)" stroke-width="0.5" rx="0.8"/>
                 ` : ""}
@@ -613,16 +614,16 @@ class PstrykPanel extends LitElement {
               <!-- day separator lines -->
               ${days.slice(1).map(d => {
                 const x = padLeft + d.index * (barW + barGap) - barGap / 2;
-                return html`
+                return svg`
                   <line x1="${x}" y1="${padTop - 5}" x2="${x}" y2="${padTop + barAreaH + 2}"
-                        stroke="var(--secondary-text-color)" stroke-width="0.4" stroke-dasharray="2,1"/>
+                        stroke="var(--secondary-text-color, #666)" stroke-width="0.4" stroke-dasharray="2,1"/>
                 `;
               })}
 
               <!-- hour labels -->
-              ${hourLabels.map(l => html`
+              ${hourLabels.map(l => svg`
                 <text x="${l.x}" y="${padTop + barAreaH + 10}"
-                      text-anchor="middle" font-size="3.5" fill="var(--secondary-text-color)">
+                      text-anchor="middle" font-size="3.5" fill="var(--secondary-text-color, #666)">
                   ${String(l.hour).padStart(2, "0")}
                 </text>
               `)}
@@ -637,10 +638,10 @@ class PstrykPanel extends LitElement {
                   : d.date.toDateString() === new Date(now.getTime() + 86400000).toDateString()
                     ? "Jutro"
                     : dayNames[d.date.getDay()];
-                return html`
+                return svg`
                   <text x="${x}" y="${padTop + barAreaH + 20}"
                         text-anchor="middle" font-size="4" font-weight="500"
-                        fill="var(--secondary-text-color)">
+                        fill="var(--secondary-text-color, #666)">
                     ${dayName}
                   </text>
                 `;

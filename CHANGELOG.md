@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.7] - 2026-03-29
+
+### Naprawione
+- Wykres prognozy cen nie renderował słupków — dynamiczne elementy SVG (rect, line, text) tworzone przez Lit `html` tag miały namespace HTML zamiast SVG, użyto `svg` tagged template
+- Dodano fallback kolory dla zmiennych CSS w SVG (--divider-color, --secondary-text-color)
+
 ## [0.6.6] - 2026-03-29
 
 ### Naprawione
