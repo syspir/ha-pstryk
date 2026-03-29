@@ -260,7 +260,6 @@ class PstrykPanel extends LitElement {
       .chart-bars {
         position: relative;
         display: flex;
-        align-items: flex-end;
         height: 180px;
         gap: 1px;
       }
@@ -283,7 +282,8 @@ class PstrykPanel extends LitElement {
       .chart-bar-col {
         flex: 1;
         display: flex;
-        align-items: flex-end;
+        flex-direction: column;
+        justify-content: flex-end;
         min-width: 0;
         position: relative;
         z-index: 1;

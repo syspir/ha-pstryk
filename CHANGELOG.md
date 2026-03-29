@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.9] - 2026-03-29
+
+### Naprawione
+- Wysokość słupków wykresu prognozy cen — kolumny nie rozciągały się na pełną wysokość kontenera, procentowa wysokość słupków nie miała referencji
+
 ## [0.6.8] - 2026-03-29
 
 ### Zmienione
