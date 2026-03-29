@@ -29,7 +29,6 @@ async function _waitForLitElement() {
 const LitElement = _getLitElement() || await _waitForLitElement();
 
 const html = LitElement.prototype.html;
-const svg = LitElement.prototype.svg || html;
 
 const css = LitElement.prototype.css || function(strings, ...values) {
   const sheet = new CSSStyleSheet();
@@ -238,13 +237,97 @@ class PstrykPanel extends LitElement {
       }
       .chart-container {
         position: relative;
-        width: 100%;
-        padding: 8px 0;
+        display: flex;
+        gap: 4px;
+        padding: 8px 12px;
       }
-      .chart-svg {
+      .chart-price-labels {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--secondary-text-color);
+        padding: 0 4px 36px 0;
+        text-align: right;
+        min-width: 36px;
+      }
+      .chart-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .chart-bars {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        height: 180px;
+        gap: 1px;
+      }
+      .chart-grid {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        pointer-events: none;
+        padding: 0 0 36px 0;
+        z-index: 0;
+      }
+      .chart-grid-line {
+        border-top: 1px solid var(--divider-color, #e0e0e0);
+      }
+      .chart-grid-line--dashed {
+        border-top-style: dashed;
+      }
+      .chart-bar-col {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        min-width: 0;
+        position: relative;
+        z-index: 1;
+      }
+      .chart-bar-col--sep {
+        margin-left: 3px;
+        border-left: 1px dashed var(--secondary-text-color, #999);
+        padding-left: 2px;
+      }
+      .chart-bar {
         width: 100%;
-        height: 200px;
-        display: block;
+        border-radius: 2px 2px 0 0;
+        transition: height 0.3s ease;
+        min-height: 2px;
+      }
+      .chart-bar--normal { background: var(--pstryk-blue); }
+      .chart-bar--cheap { background: var(--pstryk-green); }
+      .chart-bar--expensive { background: var(--pstryk-red); }
+      .chart-bar--current { background: var(--primary-color); }
+      .chart-bar--highlight {
+        box-shadow: 0 0 0 2px var(--primary-text-color);
+      }
+      .chart-hour-labels {
+        display: flex;
+        gap: 1px;
+      }
+      .chart-hour-label {
+        flex: 1;
+        text-align: center;
+        font-size: 10px;
+        color: var(--secondary-text-color);
+        padding-top: 4px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .chart-day-labels {
+        display: flex;
+      }
+      .chart-day-label {
+        text-align: center;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        padding-top: 2px;
       }
       .chart-legend {
         display: flex;
@@ -264,17 +347,11 @@ class PstrykPanel extends LitElement {
         height: 10px;
         border-radius: 2px;
       }
-      .chart-day-label {
-        font-size: 11px;
-        font-weight: 500;
-        fill: var(--secondary-text-color);
-        text-anchor: middle;
-      }
       @media (max-width: 600px) {
         :host { padding: 8px; }
         .grid { grid-template-columns: 1fr; }
         .live-grid { grid-template-columns: 1fr; }
-        .chart-svg { height: 160px; }
+        .chart-bars { height: 140px; }
       }
     `;
   }
@@ -513,20 +590,9 @@ class PstrykPanel extends LitElement {
     const maxPrice = Math.max(...prices);
     const priceRange = maxPrice - minPrice || 0.01;
 
-    // Chart dimensions
-    const chartW = 100; // percentage based
-    const chartH = 160;
-    const padTop = 20;
-    const padBottom = 30;
-    const padLeft = 0;
-    const padRight = 0;
-    const barAreaH = chartH - padTop - padBottom;
-
     const barCount = frames.length;
-    const barGap = 1;
-    const barW = Math.max(1, (chartW - padLeft - padRight) / barCount - barGap);
 
-    // Find day boundaries for labels
+    // Find day boundaries
     const days = [];
     let lastDateStr = "";
     frames.forEach((f, i) => {
@@ -538,39 +604,13 @@ class PstrykPanel extends LitElement {
 
     const dayNames = ["Niedz.", "Pon.", "Wt.", "Śr.", "Czw.", "Pt.", "Sob."];
 
-    const bars = frames.map((f, i) => {
-      const x = padLeft + i * (barW + barGap);
-      const normalizedH = ((f.price - minPrice) / priceRange) * barAreaH;
-      const barH = Math.max(2, normalizedH);
-      const y = padTop + barAreaH - barH;
-
-      let color;
-      if (f.isCurrent) {
-        color = "var(--primary-color)";
-      } else if (f.isCheap === true || f.isCheap === "True") {
-        color = "var(--pstryk-green)";
-      } else if (f.isExpensive === true || f.isExpensive === "True") {
-        color = "var(--pstryk-red)";
-      } else {
-        color = "var(--pstryk-blue)";
-      }
-
-      return { x, y, barH, barW, color, frame: f };
-    });
-
-    // Hour labels (every 3h or 6h depending on count)
+    // Hour labels interval
     const labelInterval = barCount > 30 ? 6 : 3;
-    const hourLabels = frames
-      .map((f, i) => ({ hour: f.hour, x: padLeft + i * (barW + barGap) + barW / 2, index: i, dateStr: f.dateStr }))
-      .filter(l => l.hour % labelInterval === 0);
 
     // Price labels
     const priceLabelMin = minPrice.toFixed(2);
     const priceLabelMax = maxPrice.toFixed(2);
     const priceLabelMid = ((minPrice + maxPrice) / 2).toFixed(2);
-
-    // SVG viewBox based on percentage width
-    const svgW = padLeft + barCount * (barW + barGap) + padRight;
 
     return html`
       <div class="section-title">Prognoza cen</div>
@@ -581,72 +621,59 @@ class PstrykPanel extends LitElement {
             Ceny godzinowe (zakup brutto)
           </div>
           <div class="chart-container">
-            <svg class="chart-svg" viewBox="0 0 ${svgW} ${chartH}" preserveAspectRatio="none">
-              <!-- grid lines -->
-              <line x1="${padLeft}" y1="${padTop}" x2="${svgW - padRight}" y2="${padTop}"
-                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3" stroke-dasharray="2,2"/>
-              <line x1="${padLeft}" y1="${padTop + barAreaH / 2}" x2="${svgW - padRight}" y2="${padTop + barAreaH / 2}"
-                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3" stroke-dasharray="2,2"/>
-              <line x1="${padLeft}" y1="${padTop + barAreaH}" x2="${svgW - padRight}" y2="${padTop + barAreaH}"
-                    stroke="var(--divider-color, #e0e0e0)" stroke-width="0.3"/>
-
-              <!-- price labels -->
-              <text x="${svgW - 1}" y="${padTop + 3}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMax}</text>
-              <text x="${svgW - 1}" y="${padTop + barAreaH / 2 + 1.5}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMid}</text>
-              <text x="${svgW - 1}" y="${padTop + barAreaH - 1}" text-anchor="end"
-                    font-size="3.5" fill="var(--secondary-text-color, #666)">${priceLabelMin}</text>
-
-              <!-- bars -->
-              ${bars.map(b => svg`
-                <rect x="${b.x}" y="${b.y}" width="${b.barW}" height="${b.barH}"
-                      fill="${b.color}" rx="0.5"
-                      opacity="${b.frame.isCurrent ? 1 : 0.8}">
-                  <title>${b.frame.hour}:00 — ${b.frame.price.toFixed(4)} PLN/kWh</title>
-                </rect>
-                ${b.frame.isCurrent ? svg`
-                  <rect x="${b.x - 0.3}" y="${b.y - 1}" width="${b.barW + 0.6}" height="${b.barH + 2}"
-                        fill="none" stroke="var(--primary-text-color)" stroke-width="0.5" rx="0.8"/>
-                ` : ""}
-              `)}
-
-              <!-- day separator lines -->
-              ${days.slice(1).map(d => {
-                const x = padLeft + d.index * (barW + barGap) - barGap / 2;
-                return svg`
-                  <line x1="${x}" y1="${padTop - 5}" x2="${x}" y2="${padTop + barAreaH + 2}"
-                        stroke="var(--secondary-text-color, #666)" stroke-width="0.4" stroke-dasharray="2,1"/>
-                `;
-              })}
-
-              <!-- hour labels -->
-              ${hourLabels.map(l => svg`
-                <text x="${l.x}" y="${padTop + barAreaH + 10}"
-                      text-anchor="middle" font-size="3.5" fill="var(--secondary-text-color, #666)">
-                  ${String(l.hour).padStart(2, "0")}
-                </text>
-              `)}
-
-              <!-- day labels -->
-              ${days.map((d, di) => {
-                const nextIdx = di + 1 < days.length ? days[di + 1].index : frames.length;
-                const midIdx = d.index + (nextIdx - d.index) / 2;
-                const x = padLeft + midIdx * (barW + barGap);
-                const dayName = d.date.toDateString() === now.toDateString()
-                  ? "Dziś"
-                  : d.date.toDateString() === new Date(now.getTime() + 86400000).toDateString()
-                    ? "Jutro"
-                    : dayNames[d.date.getDay()];
-                return svg`
-                  <text x="${x}" y="${padTop + barAreaH + 20}"
-                        text-anchor="middle" font-size="4" font-weight="500"
-                        fill="var(--secondary-text-color, #666)">
-                    ${dayName}
-                  </text>
-                `;
-              })}
-            </svg>
+            <div class="chart-price-labels">
+              <span>${priceLabelMax}</span>
+              <span>${priceLabelMid}</span>
+              <span>${priceLabelMin}</span>
+            </div>
+            <div class="chart-body">
+              <div class="chart-grid">
+                <div class="chart-grid-line"></div>
+                <div class="chart-grid-line chart-grid-line--dashed"></div>
+                <div class="chart-grid-line chart-grid-line--dashed"></div>
+              </div>
+              <div class="chart-bars">
+                ${frames.map((f, i) => {
+                  const pct = ((f.price - minPrice) / priceRange) * 100;
+                  const barPct = Math.max(1.5, pct);
+                  let colorClass = "chart-bar--normal";
+                  if (f.isCurrent) colorClass = "chart-bar--current";
+                  else if (f.isCheap === true || f.isCheap === "True") colorClass = "chart-bar--cheap";
+                  else if (f.isExpensive === true || f.isExpensive === "True") colorClass = "chart-bar--expensive";
+                  const isDaySep = i > 0 && f.dateStr !== frames[i - 1].dateStr;
+                  return html`
+                    <div class="chart-bar-col ${isDaySep ? 'chart-bar-col--sep' : ''}"
+                         title="${f.hour}:00 — ${f.price.toFixed(4)} PLN/kWh">
+                      <div class="chart-bar ${colorClass} ${f.isCurrent ? 'chart-bar--highlight' : ''}"
+                           style="height: ${barPct}%"></div>
+                    </div>
+                  `;
+                })}
+              </div>
+              <div class="chart-hour-labels">
+                ${frames.map((f, i) => html`
+                  <div class="chart-hour-label">
+                    ${f.hour % labelInterval === 0 ? String(f.hour).padStart(2, "0") : ""}
+                  </div>
+                `)}
+              </div>
+              <div class="chart-day-labels">
+                ${days.map((d, di) => {
+                  const nextIdx = di + 1 < days.length ? days[di + 1].index : frames.length;
+                  const span = nextIdx - d.index;
+                  const dayName = d.date.toDateString() === now.toDateString()
+                    ? "Dziś"
+                    : d.date.toDateString() === new Date(now.getTime() + 86400000).toDateString()
+                      ? "Jutro"
+                      : dayNames[d.date.getDay()];
+                  return html`
+                    <div class="chart-day-label" style="flex: ${span}">
+                      ${dayName}
+                    </div>
+                  `;
+                })}
+              </div>
+            </div>
           </div>
           <div class="chart-legend">
             <span class="chart-legend-item">

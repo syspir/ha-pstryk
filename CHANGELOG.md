@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.8] - 2026-03-29
+
+### Zmienione
+- Wykres prognozy cen przepisany z SVG na czysty HTML/CSS (flexbox) — eliminuje problem z namespace SVG w Shadow DOM Lit/HA
+
 ## [0.6.7] - 2026-03-29
 
 ### Naprawione
