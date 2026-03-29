@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.6] - 2026-03-29
+
+### Naprawione
+- Wykres prognozy cen — filtrowanie ramek z ceną 0 (dane TGE jeszcze niedostępne), eliminuje zniekształcenie skali i puste słupki
+- Atrybut price_forecast pomija ramki bez danych cenowych, zmniejszając rozmiar atrybutu
+
 ## [0.6.5] - 2026-03-29
 
 ### Naprawione

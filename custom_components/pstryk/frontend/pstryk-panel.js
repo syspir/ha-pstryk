@@ -478,7 +478,7 @@ class PstrykPanel extends LitElement {
     const now = new Date();
     const todayStr = now.toLocaleDateString("pl-PL");
     const frames = forecast
-      .filter(f => f.start && (f.full_price != null || f.price_gross != null))
+      .filter(f => f.start && ((f.full_price != null && f.full_price > 0) || (f.price_gross != null && f.price_gross > 0)))
       .map(f => {
         const d = new Date(f.start);
         return {

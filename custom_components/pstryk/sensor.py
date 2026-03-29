@@ -294,6 +294,7 @@ PRICING_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
                     "is_expensive": f.get("is_expensive"),
                 }
                 for f in data.get("all_frames", [])
+                if (f.get("full_price") or 0) > 0 or (f.get("price_gross") or 0) > 0
             ],
         },
     ),
