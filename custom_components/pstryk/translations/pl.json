@@ -37,6 +37,7 @@
       "init": {
         "title": "Opcje Pstryk Energy",
         "data": {
+          "api_token": "Token API (zostaw puste aby nie zmieniać)",
           "scan_interval": "Interwał odświeżania (minuty)",
           "is_prosumer": "Jestem prosumentem (fotowoltaika)",
           "enable_panel": "Włącz panel w menu bocznym",

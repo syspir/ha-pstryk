@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-29
+# Ostatnia modyfikacja: 2026-04-09
 
 """Config flow for Pstryk Energy integration."""
 
@@ -134,8 +134,33 @@ class PstrykOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Validate new API token if changed
+            new_token = user_input.get(CONF_API_TOKEN, "").strip()
+            current_token = (
+                self.config_entry.options.get(CONF_API_TOKEN)
+                or self.config_entry.data.get(CONF_API_TOKEN, "")
+            )
+            if new_token and new_token != current_token:
+                session = async_get_clientsession(self.hass)
+                client = PstrykApiClient(
+                    session=session,
+                    api_token=new_token,
+                )
+                try:
+                    valid = await client.validate_token()
+                    if not valid:
+                        errors["base"] = "invalid_auth"
+                except PstrykConnectionError:
+                    errors["base"] = "cannot_connect"
+                except Exception:  # noqa: BLE001
+                    errors["base"] = "unknown"
+            elif not new_token:
+                # Keep existing token if field left empty
+                user_input[CONF_API_TOKEN] = current_token
+
+            # Validate BleBox IP if provided
             blebox_ip = user_input.get(CONF_BLEBOX_IP, "").strip()
-            if blebox_ip:
+            if blebox_ip and not errors:
                 session = async_get_clientsession(self.hass)
                 blebox_client = PstrykBleBoxClient(
                     session=session, host=blebox_ip
@@ -156,6 +181,10 @@ class PstrykOptionsFlow(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_API_TOKEN,
+                        default="",
+                    ): str,
                     vol.Optional(
                         CONF_IS_PROSUMER,
                         default=self.config_entry.options.get(CONF_IS_PROSUMER, False),

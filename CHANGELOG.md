@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.1] - 2026-04-09
+
+### Zmienione
+- Niezależny start źródeł danych — błąd API Pstryk nie blokuje TGE RDN i odwrotnie, integracja zawsze wystartuje
+- Możliwość zmiany tokenu API w opcjach integracji (bez konieczności usuwania i ponownej konfiguracji)
+
+### Usunięte
+- Throttle `ConfigEntryNotReady` przy starcie — niepotrzebny gdy źródła są niezależne
+
 ## [0.7.0] - 2026-04-09
 
 ### Dodane

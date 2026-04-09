@@ -37,6 +37,7 @@
       "init": {
         "title": "Pstryk Energy Options",
         "data": {
+          "api_token": "API Token (leave empty to keep current)",
           "scan_interval": "Update interval (minutes)",
           "is_prosumer": "I am a prosumer (solar panels)",
           "enable_panel": "Enable sidebar panel",

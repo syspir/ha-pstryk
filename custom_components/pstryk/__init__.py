@@ -6,18 +6,17 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 
 from homeassistant.components.frontend import async_register_built_in_panel, async_remove_panel
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .api import PstrykApiClient, PstrykApiError
+from .api import PstrykApiClient
 from .blebox import PstrykBleBoxClient
 from .const import (
     CONF_API_TOKEN,
@@ -45,8 +44,6 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SETUP_RETRY_INTERVAL = timedelta(minutes=15)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,16 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_remove_panel(hass, PANEL_URL)
         hass.data[DOMAIN].pop("panel_registered", None)
 
-    # Throttle: don't retry setup more often than every 15 min
-    last_fail = hass.data[DOMAIN].get("last_setup_fail")
-    if last_fail and datetime.now(timezone.utc) - last_fail < SETUP_RETRY_INTERVAL:
-        remaining = SETUP_RETRY_INTERVAL - (datetime.now(timezone.utc) - last_fail)
-        raise ConfigEntryNotReady(
-            f"Rate limit cooldown, retry in {int(remaining.total_seconds())}s"
-        )
-
     session = async_get_clientsession(hass)
-    api_token = entry.data[CONF_API_TOKEN]
+    api_token = entry.options.get(CONF_API_TOKEN) or entry.data[CONF_API_TOKEN]
     tz = entry.data.get(CONF_TIMEZONE, DEFAULT_TIMEZONE)
     is_prosumer = entry.options.get(CONF_IS_PROSUMER, False)
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL)
@@ -130,25 +119,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await pricing_coordinator.async_load_stored_data()
     await tge_coordinator.async_load_stored_data()
 
-    # Fetch initial data — on failure, retry no sooner than 15 min
-    try:
-        await metrics_coordinator.async_config_entry_first_refresh()
-        await pricing_coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        hass.data[DOMAIN]["last_setup_fail"] = datetime.now(timezone.utc)
-        raise ConfigEntryNotReady(
-            f"Failed to fetch initial data: {err}"
-        ) from err
-
-    hass.data[DOMAIN].pop("last_setup_fail", None)
-
-    # TGE RDN (optional — don't block setup if tge.pl is unavailable)
-    try:
-        await tge_coordinator.async_config_entry_first_refresh()
-    except Exception:
-        _LOGGER.warning(
-            "TGE RDN data is not available, continuing without RDN prices"
-        )
+    # Fetch initial data — each source is independent, none blocks the others
+    for coord_name, coord in [
+        ("Pstryk Metrics", metrics_coordinator),
+        ("Pstryk Pricing", pricing_coordinator),
+        ("TGE RDN", tge_coordinator),
+    ]:
+        try:
+            await coord.async_config_entry_first_refresh()
+        except Exception:
+            _LOGGER.warning(
+                "%s data is not available, continuing without it", coord_name,
+            )
 
     # BleBox local meter (optional)
     blebox_ip = entry.options.get(CONF_BLEBOX_IP) or entry.data.get(CONF_BLEBOX_IP)
@@ -211,7 +193,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         # Remove panel if no config entries left
-        internal_keys = {"panel_registered", "static_path_registered", "last_setup_fail"}
+        internal_keys = {"panel_registered", "static_path_registered"}
         remaining = {k for k in hass.data[DOMAIN] if k not in internal_keys}
         if not remaining:
             async_remove_panel(hass, PANEL_URL)
