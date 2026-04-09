@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09
+# Ostatnia modyfikacja: 2026-04-09 (v0.7.2)
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -61,6 +61,13 @@ def _safe_get(data: dict, *keys: str, default: Any = None) -> Any:
         else:
             return default
     return current
+
+
+def _round05(value: float | None) -> float | None:
+    """Round value to nearest 0.05."""
+    if value is None:
+        return None
+    return round(round(value / 0.05) * 0.05, 4)
 
 
 # ──────────── Energy Usage Sensors ────────────
@@ -570,6 +577,53 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
             "date": _safe_get(data, "tomorrow", "date"),
         },
     ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_cena0",
+        translation_key="tge_rdn_cena0",
+        name="Cena RDN ≤ 0 (cena0)",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:alert-circle-outline",
+        coordinator_type="tge",
+        value_fn=lambda data: (
+            None if (p := data.get("current_price")) is None
+            else (1 if p <= 0 else 0)
+        ),
+        extra_attrs_fn=lambda data: {
+            "current_price": data.get("current_price"),
+            "hour": data.get("current_hour"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_min_price_today_r05",
+        translation_key="tge_rdn_min_price_today_r05",
+        name="Cena RDN najniższa dziś (co 0,05)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-down-bold",
+        coordinator_type="tge",
+        value_fn=lambda data: _round05(_safe_get(data, "today", "min_price")),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "today", "min_hour"),
+            "date": _safe_get(data, "today", "date"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_max_price_today_r05",
+        translation_key="tge_rdn_max_price_today_r05",
+        name="Cena RDN najwyższa dziś (co 0,05)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-up-bold",
+        coordinator_type="tge",
+        value_fn=lambda data: _round05(_safe_get(data, "today", "max_price")),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "today", "max_hour"),
+            "date": _safe_get(data, "today", "date"),
+        },
+    ),
 )
 
 
@@ -898,11 +952,18 @@ async def async_setup_entry(
                 PstrykSensorEntity(pricing_coordinator, description, entry)
             )
 
-    # Add TGE RDN sensors
+    # Add TGE RDN sensors (osobne urządzenie TGE)
     if tge_coordinator:
+        tge_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_tge")},
+            name="TGE RDN",
+            manufacturer="PSE S.A.",
+            model="Rynek Dnia Następnego (RDN)",
+            configuration_url="https://api.raporty.pse.pl",
+        )
         for description in TGE_RDN_SENSORS:
             entities.append(
-                PstrykSensorEntity(tge_coordinator, description, entry)
+                PstrykSensorEntity(tge_coordinator, description, entry, device_info=tge_device_info)
             )
 
     # Add BleBox local meter sensors
