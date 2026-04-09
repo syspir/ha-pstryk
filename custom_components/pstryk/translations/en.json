@@ -44,5 +44,24 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "tge_rdn_current_price": {
+        "name": "RDN price (current hour)"
+      },
+      "tge_rdn_min_price_today": {
+        "name": "RDN lowest price today"
+      },
+      "tge_rdn_max_price_today": {
+        "name": "RDN highest price today"
+      },
+      "tge_rdn_min_price_tomorrow": {
+        "name": "RDN lowest price tomorrow"
+      },
+      "tge_rdn_max_price_tomorrow": {
+        "name": "RDN highest price tomorrow"
+      }
+    }
   }
 }

@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-29
+# Ostatnia modyfikacja: 2026-04-09
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -34,6 +34,7 @@ from .coordinator import (
     PstrykBleBoxCoordinator,
     PstrykMetricsCoordinator,
     PstrykPricingCoordinator,
+    PstrykTgeCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -482,6 +483,96 @@ PROSUMER_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
 )
 
 
+# ──────────── TGE RDN Sensors ────────────
+
+TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
+    PstrykSensorEntityDescription(
+        key="tge_rdn_current_price",
+        translation_key="tge_rdn_current_price",
+        name="Cena RDN (bieżąca godzina)",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:currency-usd",
+        coordinator_type="tge",
+        value_fn=lambda data: data.get("current_price"),
+        extra_attrs_fn=lambda data: {
+            "hour": data.get("current_hour"),
+            "date": _safe_get(data, "today", "date"),
+            "price_forecast_today": [
+                {"hour": h, "price": p}
+                for h, p in sorted((_safe_get(data, "today", "hours") or {}).items())
+            ],
+            "price_forecast_tomorrow": [
+                {"hour": h, "price": p}
+                for h, p in sorted((_safe_get(data, "tomorrow", "hours") or {}).items())
+            ] if data.get("tomorrow") else [],
+            "tomorrow_available": data.get("tomorrow") is not None,
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_min_price_today",
+        translation_key="tge_rdn_min_price_today",
+        name="Cena RDN najniższa dziś",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-down-bold",
+        coordinator_type="tge",
+        value_fn=lambda data: _safe_get(data, "today", "min_price"),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "today", "min_hour"),
+            "date": _safe_get(data, "today", "date"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_max_price_today",
+        translation_key="tge_rdn_max_price_today",
+        name="Cena RDN najwyższa dziś",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-up-bold",
+        coordinator_type="tge",
+        value_fn=lambda data: _safe_get(data, "today", "max_price"),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "today", "max_hour"),
+            "date": _safe_get(data, "today", "date"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_min_price_tomorrow",
+        translation_key="tge_rdn_min_price_tomorrow",
+        name="Cena RDN najniższa jutro",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-down-bold-circle-outline",
+        coordinator_type="tge",
+        value_fn=lambda data: _safe_get(data, "tomorrow", "min_price"),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "tomorrow", "min_hour"),
+            "date": _safe_get(data, "tomorrow", "date"),
+        },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_max_price_tomorrow",
+        translation_key="tge_rdn_max_price_tomorrow",
+        name="Cena RDN najwyższa jutro",
+        native_unit_of_measurement=UNIT_PLN_KWH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:arrow-up-bold-circle-outline",
+        coordinator_type="tge",
+        value_fn=lambda data: _safe_get(data, "tomorrow", "max_price"),
+        extra_attrs_fn=lambda data: {
+            "hour": _safe_get(data, "tomorrow", "max_hour"),
+            "date": _safe_get(data, "tomorrow", "date"),
+        },
+    ),
+)
+
+
 # ──────────── BleBox Local Meter Sensors ────────────
 
 
@@ -770,6 +861,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     metrics_coordinator: PstrykMetricsCoordinator = data["metrics_coordinator"]
     pricing_coordinator: PstrykPricingCoordinator = data["pricing_coordinator"]
+    tge_coordinator: PstrykTgeCoordinator | None = data.get("tge_coordinator")
     blebox_coordinator: PstrykBleBoxCoordinator | None = data.get("blebox_coordinator")
     is_prosumer = entry.options.get(CONF_IS_PROSUMER, False)
 
@@ -806,6 +898,13 @@ async def async_setup_entry(
                 PstrykSensorEntity(pricing_coordinator, description, entry)
             )
 
+    # Add TGE RDN sensors
+    if tge_coordinator:
+        for description in TGE_RDN_SENSORS:
+            entities.append(
+                PstrykSensorEntity(tge_coordinator, description, entry)
+            )
+
     # Add BleBox local meter sensors
     if blebox_coordinator:
         blebox_device_info = DeviceInfo(
@@ -833,7 +932,7 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: PstrykMetricsCoordinator | PstrykPricingCoordinator | PstrykBleBoxCoordinator,
+        coordinator: PstrykMetricsCoordinator | PstrykPricingCoordinator | PstrykTgeCoordinator | PstrykBleBoxCoordinator,
         description: PstrykSensorEntityDescription,
         entry: ConfigEntry,
         device_info: DeviceInfo | None = None,

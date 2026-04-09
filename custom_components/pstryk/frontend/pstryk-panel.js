@@ -1,5 +1,5 @@
 // Marcin Koźliński
-// Ostatnia modyfikacja: 2026-03-29
+// Ostatnia modyfikacja: 2026-04-09
 
 function _getLitElement() {
   const candidates = ["hui-view", "ha-panel-lovelace", "home-assistant", "hc-lovelace"];
@@ -748,6 +748,226 @@ class PstrykPanel extends LitElement {
     `;
   }
 
+  _hasTgeRdn() {
+    return Object.keys(this.hass?.states || {}).some(e => e.startsWith("sensor.pstryk_energy_cena_rdn"));
+  }
+
+  _renderTgeRdnSection() {
+    if (!this._hasTgeRdn()) return html``;
+    const prefix = "sensor.pstryk_energy_";
+    const currentEntity = `${prefix}cena_rdn_biezaca_godzina`;
+    const minTodayEntity = `${prefix}cena_rdn_najnizsza_dzis`;
+    const maxTodayEntity = `${prefix}cena_rdn_najwyzsza_dzis`;
+    const minTomorrowEntity = `${prefix}cena_rdn_najnizsza_jutro`;
+    const maxTomorrowEntity = `${prefix}cena_rdn_najwyzsza_jutro`;
+
+    const currentPrice = this._getState(currentEntity);
+    const unit = this._getUnit(currentEntity) || "PLN/kWh";
+    const currentHour = this._getAttr(currentEntity, "hour");
+    const forecastToday = this._getAttr(currentEntity, "price_forecast_today") || [];
+    const forecastTomorrow = this._getAttr(currentEntity, "price_forecast_tomorrow") || [];
+    const tomorrowAvailable = this._getAttr(currentEntity, "tomorrow_available");
+
+    const minTodayHour = this._getAttr(minTodayEntity, "hour");
+    const maxTodayHour = this._getAttr(maxTodayEntity, "hour");
+    const minTomorrowHour = this._getAttr(minTomorrowEntity, "hour");
+    const maxTomorrowHour = this._getAttr(maxTomorrowEntity, "hour");
+
+    return html`
+      <div class="section-title">Ceny RDN (TGE — sprzedaż)</div>
+      <div class="grid-full">
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:chart-bar"></ha-icon>
+            Ceny godzinowe RDN
+          </div>
+          ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour)}
+        </ha-card>
+      </div>
+      <div class="grid">
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:currency-usd"></ha-icon>
+            Aktualna cena RDN
+          </div>
+          <div class="live-price-main" style="border-bottom: none; color: var(--primary-text-color);">
+            <div>
+              <span class="live-price-value" style="font-size: 28px;">${currentPrice !== null ? currentPrice : "---"}</span>
+              <span class="live-price-unit" style="color: var(--secondary-text-color);">${unit}</span>
+            </div>
+            <div class="live-price-label" style="color: var(--secondary-text-color);">
+              ${currentHour != null ? `Godzina ${String(currentHour).padStart(2, "0")}:00` : ""}
+            </div>
+          </div>
+        </ha-card>
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:calendar-today"></ha-icon>
+            Dziś
+          </div>
+          <div class="metric">
+            <span class="metric-label">
+              <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
+              Najniższa ${minTodayHour != null ? `(${String(minTodayHour).padStart(2, "0")}:00)` : ""}
+            </span>
+            <span class="metric-value">
+              ${this._getState(minTodayEntity) !== null ? this._getState(minTodayEntity) : "---"}
+              <span class="metric-unit">${unit}</span>
+            </span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">
+              <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
+              Najwyższa ${maxTodayHour != null ? `(${String(maxTodayHour).padStart(2, "0")}:00)` : ""}
+            </span>
+            <span class="metric-value">
+              ${this._getState(maxTodayEntity) !== null ? this._getState(maxTodayEntity) : "---"}
+              <span class="metric-unit">${unit}</span>
+            </span>
+          </div>
+        </ha-card>
+        ${tomorrowAvailable ? html`
+          <ha-card>
+            <div class="card-header">
+              <ha-icon icon="mdi:calendar-arrow-right"></ha-icon>
+              Jutro
+            </div>
+            <div class="metric">
+              <span class="metric-label">
+                <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
+                Najniższa ${minTomorrowHour != null ? `(${String(minTomorrowHour).padStart(2, "0")}:00)` : ""}
+              </span>
+              <span class="metric-value">
+                ${this._getState(minTomorrowEntity) !== null ? this._getState(minTomorrowEntity) : "---"}
+                <span class="metric-unit">${unit}</span>
+              </span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">
+                <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
+                Najwyższa ${maxTomorrowHour != null ? `(${String(maxTomorrowHour).padStart(2, "0")}:00)` : ""}
+              </span>
+              <span class="metric-value">
+                ${this._getState(maxTomorrowEntity) !== null ? this._getState(maxTomorrowEntity) : "---"}
+                <span class="metric-unit">${unit}</span>
+              </span>
+            </div>
+          </ha-card>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour) {
+    const allEntries = [];
+    const now = new Date();
+
+    for (const e of forecastToday) {
+      allEntries.push({
+        hour: e.hour,
+        price: e.price,
+        day: "today",
+        isCurrent: e.hour === currentHour && now.getDate() === new Date().getDate(),
+      });
+    }
+    for (const e of forecastTomorrow) {
+      allEntries.push({
+        hour: e.hour,
+        price: e.price,
+        day: "tomorrow",
+        isCurrent: false,
+      });
+    }
+
+    if (!allEntries.length) {
+      return html`<div class="empty-message">Brak danych RDN</div>`;
+    }
+
+    const prices = allEntries.map(e => e.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice || 0.01;
+    const hasNegative = minPrice < 0;
+
+    // For charts with negative values, calculate zero line position
+    const zeroOffset = hasNegative ? Math.abs(minPrice) : 0;
+    const totalRange = hasNegative ? maxPrice + zeroOffset : priceRange;
+
+    const hasTomorrow = allEntries.some(e => e.day === "tomorrow");
+    const labelInterval = allEntries.length > 30 ? 6 : 3;
+
+    const priceLabelMax = maxPrice.toFixed(2);
+    const priceLabelMin = minPrice.toFixed(2);
+    const priceLabelMid = ((minPrice + maxPrice) / 2).toFixed(2);
+
+    return html`
+      <div class="chart-container">
+        <div class="chart-price-labels">
+          <span>${priceLabelMax}</span>
+          <span>${priceLabelMid}</span>
+          <span>${priceLabelMin}</span>
+        </div>
+        <div class="chart-body">
+          <div class="chart-grid">
+            <div class="chart-grid-line"></div>
+            <div class="chart-grid-line chart-grid-line--dashed"></div>
+            <div class="chart-grid-line chart-grid-line--dashed"></div>
+          </div>
+          <div class="chart-bars">
+            ${allEntries.map((e, i) => {
+              const pct = ((e.price - minPrice) / (totalRange || 0.01)) * 100;
+              const barPct = Math.max(1.5, pct);
+              let colorClass = "chart-bar--normal";
+              if (e.isCurrent) colorClass = "chart-bar--current";
+              else if (e.price === minPrice) colorClass = "chart-bar--cheap";
+              else if (e.price === maxPrice) colorClass = "chart-bar--expensive";
+              else if (e.price < 0) colorClass = "chart-bar--cheap";
+              const isDaySep = i > 0 && e.day !== allEntries[i - 1].day;
+              return html`
+                <div class="chart-bar-col ${isDaySep ? 'chart-bar-col--sep' : ''}"
+                     title="${String(e.hour).padStart(2, '0')}:00 — ${e.price.toFixed(4)} PLN/kWh">
+                  <div class="chart-bar ${colorClass} ${e.isCurrent ? 'chart-bar--highlight' : ''}"
+                       style="height: ${barPct}%"></div>
+                </div>
+              `;
+            })}
+          </div>
+          <div class="chart-hour-labels">
+            ${allEntries.map(e => html`
+              <div class="chart-hour-label">
+                ${e.hour % labelInterval === 0 ? String(e.hour).padStart(2, "0") : ""}
+              </div>
+            `)}
+          </div>
+          ${hasTomorrow ? html`
+            <div class="chart-day-labels">
+              <div class="chart-day-label" style="flex: ${allEntries.filter(e => e.day === 'today').length}">Dziś</div>
+              <div class="chart-day-label" style="flex: ${allEntries.filter(e => e.day === 'tomorrow').length}">Jutro</div>
+            </div>
+          ` : ""}
+        </div>
+      </div>
+      <div class="chart-legend">
+        <span class="chart-legend-item">
+          <span class="chart-legend-dot" style="background: var(--primary-color)"></span>
+          Teraz
+        </span>
+        <span class="chart-legend-item">
+          <span class="chart-legend-dot" style="background: var(--pstryk-green)"></span>
+          Najtańsza
+        </span>
+        <span class="chart-legend-item">
+          <span class="chart-legend-dot" style="background: var(--pstryk-red)"></span>
+          Najdroższa
+        </span>
+        <span class="chart-legend-item">
+          <span class="chart-legend-dot" style="background: var(--pstryk-blue)"></span>
+          Normalna
+        </span>
+      </div>
+    `;
+  }
+
   _hasBleBox() {
     const prefix = "sensor.pstryk_meter_";
     return Object.keys(this.hass?.states || {}).some(e => e.startsWith(prefix));
@@ -855,6 +1075,7 @@ class PstrykPanel extends LitElement {
       ${this._renderLiveSection()}
       ${this._renderPriceChart()}
       ${this._renderPricingSection()}
+      ${this._renderTgeRdnSection()}
       ${this._renderEnergySection()}
       ${this._renderCostSection()}
       ${this._renderBleBoxSection()}

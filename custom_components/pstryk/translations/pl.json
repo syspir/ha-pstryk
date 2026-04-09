@@ -44,5 +44,24 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "tge_rdn_current_price": {
+        "name": "Cena RDN (bieżąca godzina)"
+      },
+      "tge_rdn_min_price_today": {
+        "name": "Cena RDN najniższa dziś"
+      },
+      "tge_rdn_max_price_today": {
+        "name": "Cena RDN najwyższa dziś"
+      },
+      "tge_rdn_min_price_tomorrow": {
+        "name": "Cena RDN najniższa jutro"
+      },
+      "tge_rdn_max_price_tomorrow": {
+        "name": "Cena RDN najwyższa jutro"
+      }
+    }
   }
 }

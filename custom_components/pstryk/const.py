@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-29
+# Ostatnia modyfikacja: 2026-04-09
 
 """Constants for the Pstryk Energy integration."""
 
@@ -30,6 +30,7 @@ DEFAULT_NAME = "Pstryk"
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)
 UPDATE_INTERVAL_PRICING = timedelta(minutes=45)
+UPDATE_INTERVAL_TGE = timedelta(minutes=60)
 UPDATE_INTERVAL_BLEBOX = timedelta(seconds=5)
 
 # Metrics

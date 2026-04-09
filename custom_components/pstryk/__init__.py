@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-29
+# Ostatnia modyfikacja: 2026-04-09
 
 """The Pstryk Energy integration."""
 
@@ -35,11 +35,13 @@ from .const import (
     PLATFORMS,
     UPDATE_INTERVAL_BLEBOX,
     UPDATE_INTERVAL_PRICING,
+    UPDATE_INTERVAL_TGE,
 )
 from .coordinator import (
     PstrykBleBoxCoordinator,
     PstrykMetricsCoordinator,
     PstrykPricingCoordinator,
+    PstrykTgeCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=15",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=16",
                 }
             },
             require_admin=False,
@@ -116,9 +118,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_id=entry.entry_id,
     )
 
+    tge_coordinator = PstrykTgeCoordinator(
+        hass=hass,
+        session=session,
+        update_interval=UPDATE_INTERVAL_TGE,
+        entry_id=entry.entry_id,
+    )
+
     # Restore last known data from storage (sensors available immediately)
     await metrics_coordinator.async_load_stored_data()
     await pricing_coordinator.async_load_stored_data()
+    await tge_coordinator.async_load_stored_data()
 
     # Fetch initial data — on failure, retry no sooner than 15 min
     try:
@@ -131,6 +141,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     hass.data[DOMAIN].pop("last_setup_fail", None)
+
+    # TGE RDN (optional — don't block setup if tge.pl is unavailable)
+    try:
+        await tge_coordinator.async_config_entry_first_refresh()
+    except Exception:
+        _LOGGER.warning(
+            "TGE RDN data is not available, continuing without RDN prices"
+        )
 
     # BleBox local meter (optional)
     blebox_ip = entry.options.get(CONF_BLEBOX_IP) or entry.data.get(CONF_BLEBOX_IP)
@@ -158,6 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "client": client,
         "metrics_coordinator": metrics_coordinator,
         "pricing_coordinator": pricing_coordinator,
+        "tge_coordinator": tge_coordinator,
         "blebox_coordinator": blebox_coordinator,
     }
 
@@ -166,6 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1-minute tick to recalculate current price frame (no API call)
     async def _tick_recalculate(_now) -> None:
         pricing_coordinator.recalculate_current()
+        tge_coordinator.recalculate_current()
 
     cancel_tick = async_track_time_interval(
         hass,

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0] - 2026-04-09
+
+### Dodane
+- Ceny RDN z Towarowej Giełdy Energii — pobieranie godzinowych cen sprzedaży energii z API PSE (api.raporty.pse.pl)
+- Nowy koordynator TGE z odświeżaniem co 60 min i minutowym przeliczaniem aktualnej godziny
+- 5 nowych sensorów: cena RDN bieżąca godzina, najniższa/najwyższa dziś, najniższa/najwyższa jutro
+- Atrybuty sensorów z prognozą godzinową na dziś i jutro
+- Sekcja „Ceny RDN (TGE — sprzedaż)" w panelu z wykresem słupkowym cen godzinowych
+- Karty aktualnej ceny RDN, min/max dziś i jutro (warunkowa — po publikacji danych ~13:00)
+- Persistent storage dla danych TGE — sensory dostępne od razu po restarcie
+
 ## [0.6.9] - 2026-03-29
 
 ### Naprawione

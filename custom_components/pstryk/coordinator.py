@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-03-29
+# Ostatnia modyfikacja: 2026-04-09
 
 """Data update coordinators for Pstryk Energy."""
 
@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import PstrykApiClient, PstrykApiError, PstrykAuthError
 from .blebox import PstrykBleBoxClient, PstrykBleBoxError
 from .const import ATTRIBUTION, DOMAIN
+from .tge import TgeRdnError, aggregate_hourly, fetch_rce_prices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,6 +222,103 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Recalculate current price from stored frames (no API call)."""
         if self._raw_pricing:
             self.async_set_updated_data(self._process_data())
+
+
+class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator for TGE RDN prices via PSE API (api.raporty.pse.pl)."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        session,
+        update_interval: timedelta,
+        entry_id: str,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_tge",
+            update_interval=update_interval,
+        )
+        self._session = session
+        self.attribution = "Dane z PSE S.A. (api.raporty.pse.pl)"
+        self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_tge_{entry_id}")
+
+    async def async_load_stored_data(self) -> None:
+        """Load last known data from persistent storage."""
+        stored = await self._store.async_load()
+        if stored:
+            self.async_set_updated_data(stored)
+            _LOGGER.debug("Restored TGE RDN data from storage")
+
+    @staticmethod
+    def _build_day_data(
+        hourly: dict[int, float], target_date: str,
+    ) -> dict[str, Any] | None:
+        """Build structured day data from hourly prices."""
+        if not hourly:
+            return None
+        min_hour = min(hourly, key=hourly.get)
+        max_hour = max(hourly, key=hourly.get)
+        return {
+            "date": target_date,
+            "hours": hourly,
+            "min_price": hourly[min_hour],
+            "min_hour": min_hour,
+            "max_price": hourly[max_hour],
+            "max_hour": max_hour,
+        }
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch RCE prices for today and tomorrow from PSE API."""
+        import zoneinfo
+        now = datetime.now(zoneinfo.ZoneInfo("Europe/Warsaw"))
+        today = now.date()
+        tomorrow = today + timedelta(days=1)
+
+        try:
+            today_records = await fetch_rce_prices(self._session, today)
+            tomorrow_records = await fetch_rce_prices(self._session, tomorrow)
+        except TgeRdnError as err:
+            if self.data:
+                _LOGGER.warning("PSE RCE API error, keeping last data: %s", err)
+                return self.data
+            raise UpdateFailed(f"PSE RCE API error: {err}") from err
+
+        today_hourly = aggregate_hourly(today_records)
+        tomorrow_hourly = aggregate_hourly(tomorrow_records)
+
+        today_data = self._build_day_data(today_hourly, today.isoformat())
+        tomorrow_data = self._build_day_data(tomorrow_hourly, tomorrow.isoformat())
+
+        current_hour = now.hour
+        current_price = today_hourly.get(current_hour)
+
+        result = {
+            "today": today_data,
+            "tomorrow": tomorrow_data,
+            "current_price": current_price,
+            "current_hour": current_hour,
+        }
+        await self._store.async_save(result)
+        return result
+
+    def recalculate_current(self) -> None:
+        """Recalculate current hour price from stored data (no fetch)."""
+        if not self.data or not self.data.get("today"):
+            return
+        import zoneinfo
+        now = datetime.now(zoneinfo.ZoneInfo("Europe/Warsaw"))
+        current_hour = now.hour
+        today = self.data["today"]
+        current_price = None
+        if today and current_hour in today.get("hours", {}):
+            current_price = today["hours"][current_hour]
+        updated = dict(self.data)
+        updated["current_price"] = current_price
+        updated["current_hour"] = current_hour
+        self.async_set_updated_data(updated)
 
 
 class PstrykBleBoxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
