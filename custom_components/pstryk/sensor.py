@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09 (v0.7.2)
+# Ostatnia modyfikacja: 2026-04-09 (v0.7.3)
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -68,6 +68,26 @@ def _round05(value: float | None) -> float | None:
     if value is None:
         return None
     return round(round(value / 0.05) * 0.05, 4)
+
+
+def _tge_cena_lt_avg23(data: dict) -> int | None:
+    """Return 1 if current price <= avg_today * 2/3, else 0."""
+    price = data.get("current_price")
+    hours = _safe_get(data, "today", "hours") or {}
+    if price is None or not hours:
+        return None
+    avg = sum(hours.values()) / len(hours)
+    return 1 if price <= avg * 2 / 3 else 0
+
+
+def _tge_cena_lt_avg23_attrs(data: dict) -> dict:
+    hours = _safe_get(data, "today", "hours") or {}
+    avg = sum(hours.values()) / len(hours) if hours else None
+    return {
+        "current_price": data.get("current_price"),
+        "avg_today": round(avg, 4) if avg is not None else None,
+        "threshold_2_3_avg": round(avg * 2 / 3, 4) if avg is not None else None,
+    }
 
 
 # ──────────── Energy Usage Sensors ────────────
@@ -623,6 +643,17 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
             "hour": _safe_get(data, "today", "max_hour"),
             "date": _safe_get(data, "today", "date"),
         },
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_cena_lt_avg23",
+        translation_key="tge_rdn_cena_lt_avg23",
+        name="Cena RDN ≤ 2/3 średniej dnia",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:approximately-equal-box",
+        coordinator_type="tge",
+        value_fn=_tge_cena_lt_avg23,
+        extra_attrs_fn=_tge_cena_lt_avg23_attrs,
     ),
 )
 

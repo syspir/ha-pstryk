@@ -71,6 +71,9 @@
       },
       "tge_rdn_max_price_today_r05": {
         "name": "Cena RDN najwyższa dziś (co 0,05)"
+      },
+      "tge_rdn_cena_lt_avg23": {
+        "name": "Cena RDN ≤ 2/3 średniej dnia"
       }
     }
   }
