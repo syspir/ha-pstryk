@@ -775,6 +775,8 @@ class PstrykPanel extends LitElement {
     const avgE23Entity   = "sensor.tge_rdn_cena_rdn_2_3_sredniej_dnia";
     const minR05Entity   = "sensor.tge_rdn_cena_rdn_najnizsza_dzis_co_0_05";
     const maxR05Entity   = "sensor.tge_rdn_cena_rdn_najwyzsza_dzis_co_0_05";
+    const ltMin05Entity  = "sensor.tge_rdn_cena_rdn_min_0_05";
+    const gtMax05Entity  = "sensor.tge_rdn_cena_rdn_max_0_05";
 
     const currentPrice = this._getState(currentEntity);
     const unit = this._getUnit(currentEntity) || "PLN/kWh";
@@ -869,18 +871,22 @@ class PstrykPanel extends LitElement {
             </div>
           </ha-card>
         ` : ""}
-        ${this._renderTgeIndicatorsCard(cena0Entity, avgE23Entity, minR05Entity, maxR05Entity, unit)}
+        ${this._renderTgeIndicatorsCard(cena0Entity, avgE23Entity, minR05Entity, maxR05Entity, ltMin05Entity, gtMax05Entity, unit)}
       </div>
     `;
   }
 
-  _renderTgeIndicatorsCard(cena0E, avgE23E, minR05E, maxR05E, unit) {
+  _renderTgeIndicatorsCard(cena0E, avgE23E, minR05E, maxR05E, ltMin05E, gtMax05E, unit) {
     const cena0 = this._getState(cena0E);
     const avgE23 = this._getState(avgE23E);
     const minR05 = this._getState(minR05E);
     const maxR05 = this._getState(maxR05E);
+    const ltMin05 = this._getState(ltMin05E);
+    const gtMax05 = this._getState(gtMax05E);
     const avgToday = this._getAttr(avgE23E, "avg_today");
     const threshold = this._getAttr(avgE23E, "threshold_2_3_avg");
+    const minThreshold = this._getAttr(ltMin05E, "threshold");
+    const maxThreshold = this._getAttr(gtMax05E, "threshold");
 
     const _badge = (val) => {
       if (val === null) return html`<span class="metric-unit">---</span>`;
@@ -947,6 +953,20 @@ class PstrykPanel extends LitElement {
             ${maxR05 !== null ? maxR05 : "---"}
             <span class="metric-unit">${unit}</span>
           </span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:arrow-down-circle-outline"></ha-icon>
+            Cena &lt; Min+0,05 ${minThreshold != null ? `(próg: ${Number(minThreshold).toFixed(4)})` : ""}
+          </span>
+          ${_badge(ltMin05)}
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:arrow-up-circle-outline"></ha-icon>
+            Cena &gt; Max−0,05 ${maxThreshold != null ? `(próg: ${Number(maxThreshold).toFixed(4)})` : ""}
+          </span>
+          ${_badge(gtMax05)}
         </div>
       </ha-card>
     `;

@@ -74,6 +74,12 @@
       },
       "tge_rdn_cena_lt_avg23": {
         "name": "Cena RDN ≤ 2/3 średniej dnia"
+      },
+      "tge_rdn_cena_lt_min05": {
+        "name": "Cena RDN < Min+0,05"
+      },
+      "tge_rdn_cena_gt_max05": {
+        "name": "Cena RDN > Max-0,05"
       }
     }
   }

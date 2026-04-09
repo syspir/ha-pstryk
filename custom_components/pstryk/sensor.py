@@ -90,6 +90,42 @@ def _tge_cena_lt_avg23_attrs(data: dict) -> dict:
     }
 
 
+def _tge_cena_lt_min05(data: dict) -> int | None:
+    """Return 1 if current price < min_today + 0.05, else 0."""
+    price = data.get("current_price")
+    min_price = _safe_get(data, "today", "min_price")
+    if price is None or min_price is None:
+        return None
+    return 1 if price < min_price + 0.05 else 0
+
+
+def _tge_cena_lt_min05_attrs(data: dict) -> dict:
+    min_price = _safe_get(data, "today", "min_price")
+    return {
+        "current_price": data.get("current_price"),
+        "min_today": min_price,
+        "threshold": round(min_price + 0.05, 4) if min_price is not None else None,
+    }
+
+
+def _tge_cena_gt_max05(data: dict) -> int | None:
+    """Return 1 if current price > max_today - 0.05, else 0."""
+    price = data.get("current_price")
+    max_price = _safe_get(data, "today", "max_price")
+    if price is None or max_price is None:
+        return None
+    return 1 if price > max_price - 0.05 else 0
+
+
+def _tge_cena_gt_max05_attrs(data: dict) -> dict:
+    max_price = _safe_get(data, "today", "max_price")
+    return {
+        "current_price": data.get("current_price"),
+        "max_today": max_price,
+        "threshold": round(max_price - 0.05, 4) if max_price is not None else None,
+    }
+
+
 # ──────────── Energy Usage Sensors ────────────
 
 ENERGY_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
@@ -654,6 +690,28 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         coordinator_type="tge",
         value_fn=_tge_cena_lt_avg23,
         extra_attrs_fn=_tge_cena_lt_avg23_attrs,
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_cena_lt_min05",
+        translation_key="tge_rdn_cena_lt_min05",
+        name="Cena RDN < Min+0,05",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:arrow-down-circle-outline",
+        coordinator_type="tge",
+        value_fn=_tge_cena_lt_min05,
+        extra_attrs_fn=_tge_cena_lt_min05_attrs,
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_cena_gt_max05",
+        translation_key="tge_rdn_cena_gt_max05",
+        name="Cena RDN > Max-0,05",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:arrow-up-circle-outline",
+        coordinator_type="tge",
+        value_fn=_tge_cena_gt_max05,
+        extra_attrs_fn=_tge_cena_gt_max05_attrs,
     ),
 )
 
