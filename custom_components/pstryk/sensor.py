@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09 (v0.7.3)
+# Ostatnia modyfikacja: 2026-04-09 (v0.7.4)
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -1031,8 +1031,8 @@ class PstrykSensorEntity(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self.entity_description = description
         self._attr_has_entity_name = True
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = device_info or DeviceInfo(
