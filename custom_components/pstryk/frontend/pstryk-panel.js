@@ -1,5 +1,5 @@
 // Marcin Koźliński
-// Ostatnia modyfikacja: 2026-04-09
+// Ostatnia modyfikacja: 2026-04-09 (v0.7.5)
 
 function _getLitElement() {
   const candidates = ["hui-view", "ha-panel-lovelace", "home-assistant", "hc-lovelace"];
@@ -749,17 +749,32 @@ class PstrykPanel extends LitElement {
   }
 
   _hasTgeRdn() {
-    return Object.keys(this.hass?.states || {}).some(e => e.startsWith("sensor.pstryk_energy_cena_rdn"));
+    const s = Object.keys(this.hass?.states || {});
+    return s.some(e => e.startsWith("sensor.pstryk_energy_cena_rdn") || e.startsWith("sensor.tge_rdn_cena_rdn"));
   }
 
   _renderTgeRdnSection() {
     if (!this._hasTgeRdn()) return html``;
-    const prefix = "sensor.pstryk_energy_";
-    const currentEntity = `${prefix}cena_rdn_biezaca_godzina`;
-    const minTodayEntity = `${prefix}cena_rdn_najnizsza_dzis`;
-    const maxTodayEntity = `${prefix}cena_rdn_najwyzsza_dzis`;
-    const minTomorrowEntity = `${prefix}cena_rdn_najnizsza_jutro`;
-    const maxTomorrowEntity = `${prefix}cena_rdn_najwyzsza_jutro`;
+
+    // Encje mogą mieć prefix "tge_rdn_" (nowe instalacje) lub "pstryk_energy_" (stare)
+    const st = this.hass?.states || {};
+    const tid = (suffix) => {
+      const a = `sensor.tge_rdn_${suffix}`;
+      const b = `sensor.pstryk_energy_${suffix}`;
+      return st[a] !== undefined ? a : b;
+    };
+
+    const currentEntity   = tid("cena_rdn_biezaca_godzina");
+    const minTodayEntity  = tid("cena_rdn_najnizsza_dzis");
+    const maxTodayEntity  = tid("cena_rdn_najwyzsza_dzis");
+    const minTomorrowEntity = tid("cena_rdn_najnizsza_jutro");
+    const maxTomorrowEntity = tid("cena_rdn_najwyzsza_jutro");
+
+    // Nowe wskaźniki — zawsze prefix tge_rdn_
+    const cena0Entity    = "sensor.tge_rdn_cena_rdn_0_cena0";
+    const avgE23Entity   = "sensor.tge_rdn_cena_rdn_2_3_sredniej_dnia";
+    const minR05Entity   = "sensor.tge_rdn_cena_rdn_najnizsza_dzis_co_0_05";
+    const maxR05Entity   = "sensor.tge_rdn_cena_rdn_najwyzsza_dzis_co_0_05";
 
     const currentPrice = this._getState(currentEntity);
     const unit = this._getUnit(currentEntity) || "PLN/kWh";
@@ -854,7 +869,86 @@ class PstrykPanel extends LitElement {
             </div>
           </ha-card>
         ` : ""}
+        ${this._renderTgeIndicatorsCard(cena0Entity, avgE23Entity, minR05Entity, maxR05Entity, unit)}
       </div>
+    `;
+  }
+
+  _renderTgeIndicatorsCard(cena0E, avgE23E, minR05E, maxR05E, unit) {
+    const cena0 = this._getState(cena0E);
+    const avgE23 = this._getState(avgE23E);
+    const minR05 = this._getState(minR05E);
+    const maxR05 = this._getState(maxR05E);
+    const avgToday = this._getAttr(avgE23E, "avg_today");
+    const threshold = this._getAttr(avgE23E, "threshold_2_3_avg");
+
+    const _badge = (val) => {
+      if (val === null) return html`<span class="metric-unit">---</span>`;
+      const active = String(val) === "1";
+      return html`<span class="badge ${active ? "badge-cheap" : "badge-neutral"}" style="${active ? "" : "background:var(--secondary-text-color);opacity:0.6"}">${active ? "TAK" : "NIE"}</span>`;
+    };
+
+    return html`
+      <ha-card>
+        <div class="card-header">
+          <ha-icon icon="mdi:gauge"></ha-icon>
+          Wskaźniki TGE
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+            Cena ≤ 0 PLN/kWh
+          </span>
+          ${_badge(cena0)}
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:approximately-equal-box"></ha-icon>
+            Cena ≤ 2/3 średniej dnia
+          </span>
+          ${_badge(avgE23)}
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:format-align-middle"></ha-icon>
+            Średnia dnia
+          </span>
+          <span class="metric-value">
+            ${avgToday != null ? Number(avgToday).toFixed(4) : "---"}
+            <span class="metric-unit">${unit}</span>
+          </span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:ray-vertex"></ha-icon>
+            Próg 2/3 średniej
+          </span>
+          <span class="metric-value">
+            ${threshold != null ? Number(threshold).toFixed(4) : "---"}
+            <span class="metric-unit">${unit}</span>
+          </span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
+            Min dziś (±0,05)
+          </span>
+          <span class="metric-value">
+            ${minR05 !== null ? minR05 : "---"}
+            <span class="metric-unit">${unit}</span>
+          </span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">
+            <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
+            Max dziś (±0,05)
+          </span>
+          <span class="metric-value">
+            ${maxR05 !== null ? maxR05 : "---"}
+            <span class="metric-unit">${unit}</span>
+          </span>
+        </div>
+      </ha-card>
     `;
   }
 

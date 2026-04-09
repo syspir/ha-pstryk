@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=16",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=17",
                 }
             },
             require_admin=False,
