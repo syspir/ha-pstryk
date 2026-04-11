@@ -67,7 +67,7 @@ def _round05(value: float | None) -> float | None:
     """Round value to nearest 0.05."""
     if value is None:
         return None
-    return round(round(value / 0.05) * 0.05, 4)
+    return round(round(value / 0.05) * 0.05, 2)
 
 
 def _tge_cena_lt_avg23(data: dict) -> int | None:
@@ -85,8 +85,8 @@ def _tge_cena_lt_avg23_attrs(data: dict) -> dict:
     avg = sum(hours.values()) / len(hours) if hours else None
     return {
         "current_price": data.get("current_price"),
-        "avg_today": round(avg, 4) if avg is not None else None,
-        "threshold_2_3_avg": round(avg * 2 / 3, 4) if avg is not None else None,
+        "avg_today": round(avg, 2) if avg is not None else None,
+        "threshold_2_3_avg": round(avg * 2 / 3, 2) if avg is not None else None,
     }
 
 
@@ -104,7 +104,7 @@ def _tge_cena_lt_min05_attrs(data: dict) -> dict:
     return {
         "current_price": data.get("current_price"),
         "min_today": min_price,
-        "threshold": round(min_price + 0.05, 4) if min_price is not None else None,
+        "threshold": round(min_price + 0.05, 2) if min_price is not None else None,
     }
 
 
@@ -122,7 +122,7 @@ def _tge_cena_gt_max05_attrs(data: dict) -> dict:
     return {
         "current_price": data.get("current_price"),
         "max_today": max_price,
-        "threshold": round(max_price - 0.05, 4) if max_price is not None else None,
+        "threshold": round(max_price - 0.05, 2) if max_price is not None else None,
     }
 
 

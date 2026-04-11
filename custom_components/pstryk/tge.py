@@ -77,7 +77,8 @@ def _parse_fixing_prices(html: str, target_date: date) -> dict[int, float]:
             )
             try:
                 price_mwh = float(price_raw)
-                hourly[hour] = round(price_mwh / 1000, 4)
+                price_net = price_mwh / 1000
+                hourly[hour] = round(price_net * 1.23, 2)
             except ValueError:
                 _LOGGER.warning(
                     "Cannot parse TGE price for %s H%02d: %s",

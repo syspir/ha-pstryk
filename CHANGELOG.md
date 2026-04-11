@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.2] - 2026-04-11
+
+### Zmienione
+- Ceny TGE RDN przeliczane na brutto (×1,23 VAT) — wartości zgodne z pstryk.pl/ceny kolumna brutto
+- Format walutowy z 2 miejscami po przecinku (0,10 zamiast 0,1)
+
 ## [0.8.1] - 2026-04-11
 
 ### Naprawione

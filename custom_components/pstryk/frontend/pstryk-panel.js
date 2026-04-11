@@ -791,7 +791,7 @@ class PstrykPanel extends LitElement {
     const maxTomorrowHour = this._getAttr(maxTomorrowEntity, "hour");
 
     return html`
-      <div class="section-title">Ceny RDN Fixing I (TGE — netto)</div>
+      <div class="section-title">Ceny RDN Fixing I (TGE — brutto)</div>
       <div class="grid-full">
         <ha-card>
           <div class="card-header">
@@ -805,7 +805,7 @@ class PstrykPanel extends LitElement {
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:currency-usd"></ha-icon>
-            Aktualna cena RDN (netto)
+            Aktualna cena RDN (brutto)
           </div>
           <div class="live-price-main" style="border-bottom: none; color: var(--primary-text-color);">
             <div>
