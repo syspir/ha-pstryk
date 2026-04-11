@@ -770,14 +770,6 @@ class PstrykPanel extends LitElement {
     const minTomorrowEntity = tid("cena_rdn_najnizsza_jutro");
     const maxTomorrowEntity = tid("cena_rdn_najwyzsza_jutro");
 
-    // Nowe wskaźniki — zawsze prefix tge_rdn_
-    const cena0Entity    = "sensor.tge_rdn_cena_rdn_0_cena0";
-    const avgE23Entity   = "sensor.tge_rdn_cena_rdn_2_3_sredniej_dnia";
-    const minR05Entity   = "sensor.tge_rdn_cena_rdn_najnizsza_dzis_co_0_05";
-    const maxR05Entity   = "sensor.tge_rdn_cena_rdn_najwyzsza_dzis_co_0_05";
-    const ltMin05Entity  = "sensor.tge_rdn_cena_rdn_min_0_05";
-    const gtMax05Entity  = "sensor.tge_rdn_cena_rdn_max_0_05";
-
     const currentPrice = this._getState(currentEntity);
     const unit = this._getUnit(currentEntity) || "PLN/kWh";
     const currentHour = this._getAttr(currentEntity, "hour");
@@ -880,22 +872,30 @@ class PstrykPanel extends LitElement {
             </div>
           </ha-card>
         ` : ""}
-        ${this._renderTgeIndicatorsCard(cena0Entity, avgE23Entity, minR05Entity, maxR05Entity, ltMin05Entity, gtMax05Entity, unit)}
+        ${this._renderTgeIndicatorsCard(currentPrice, this._getState(minTodayEntity), this._getState(maxTodayEntity), forecastToday, unit)}
       </div>
     `;
   }
 
-  _renderTgeIndicatorsCard(cena0E, avgE23E, minR05E, maxR05E, ltMin05E, gtMax05E, unit) {
-    const cena0 = this._getState(cena0E);
-    const avgE23 = this._getState(avgE23E);
-    const minR05 = this._getState(minR05E);
-    const maxR05 = this._getState(maxR05E);
-    const ltMin05 = this._getState(ltMin05E);
-    const gtMax05 = this._getState(gtMax05E);
-    const avgToday = this._getAttr(avgE23E, "avg_today");
-    const threshold = this._getAttr(avgE23E, "threshold_2_3_avg");
-    const minThreshold = this._getAttr(ltMin05E, "threshold");
-    const maxThreshold = this._getAttr(gtMax05E, "threshold");
+  _renderTgeIndicatorsCard(currentPrice, minTodayStr, maxTodayStr, forecastToday, unit) {
+    const cur = currentPrice !== null ? parseFloat(currentPrice) : NaN;
+    const minToday = minTodayStr !== null ? parseFloat(minTodayStr) : NaN;
+    const maxToday = maxTodayStr !== null ? parseFloat(maxTodayStr) : NaN;
+    const prices = (forecastToday || []).map(f => f.price).filter(p => p != null);
+    const avgVal = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : NaN;
+
+    const round05 = (v) => isNaN(v) ? null : (Math.round(v / 0.05) * 0.05).toFixed(2);
+
+    const cena0 = isNaN(cur) ? null : (cur <= 0 ? "1" : "0");
+    const avgE23 = (isNaN(cur) || isNaN(avgVal)) ? null : (cur <= avgVal * 2 / 3 ? "1" : "0");
+    const minR05 = round05(minToday);
+    const maxR05 = round05(maxToday);
+    const ltMin05 = (isNaN(cur) || isNaN(minToday)) ? null : (cur < minToday + 0.05 ? "1" : "0");
+    const gtMax05 = (isNaN(cur) || isNaN(maxToday)) ? null : (cur > maxToday - 0.05 ? "1" : "0");
+    const avgToday = isNaN(avgVal) ? null : avgVal.toFixed(4);
+    const threshold = isNaN(avgVal) ? null : (avgVal * 2 / 3).toFixed(4);
+    const minThreshold = isNaN(minToday) ? null : (minToday + 0.05).toFixed(4);
+    const maxThreshold = isNaN(maxToday) ? null : (maxToday - 0.05).toFixed(4);
 
     const _badge = (val) => {
       if (val === null) return html`<span class="metric-unit">---</span>`;

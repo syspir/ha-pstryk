@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.9] - 2026-04-12
+
+### Naprawione
+- Wskaźniki TGE w panelu (Min/Max ±0,05, Cena < Min+0,05, Cena > Max−0,05) wyświetlały "---" — przyczyną były błędne hardkodowane entity_id (slugifikacja polskich nazw z przecinkami dawała inne identyfikatory niż zakładane). Wskaźniki są teraz obliczane bezpośrednio w JavaScript z danych działających sensorów
+
+### Usunięte
+- Tłumaczenie angielskie (translations/en.json) — integracja obsługuje tylko język polski
+
 ## [0.8.8] - 2026-04-12
 
 ### Naprawione
