@@ -17,6 +17,8 @@ import aiohttp
 _LOGGER = logging.getLogger(__name__)
 
 TGE_RDN_URL = "https://tge.pl/energia-elektryczna-rdn"
+# tge.pl blocks aiohttp User-Agent — override with a neutral one
+_TGE_HEADERS = {"User-Agent": "python-requests/2.31.0"}
 
 
 class TgeRdnError(Exception):
@@ -42,6 +44,7 @@ async def fetch_rdn_fixing(
         async with session.get(
             TGE_RDN_URL,
             params=params,
+            headers=_TGE_HEADERS,
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
             if response.status != 200:

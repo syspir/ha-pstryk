@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.8] - 2026-04-12
+
+### Naprawione
+- Pobieranie danych z tge.pl — strona TGE blokuje domyślny User-Agent aiohttp, zmieniony na neutralny nagłówek
+
 ## [0.8.7] - 2026-04-12
 
 ### Naprawione
