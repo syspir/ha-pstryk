@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.8] - 2026-04-11
+
+### Naprawione
+- Prognoza RDN na kolejny dzień mogła nie pojawiać się w panelu — koordynator TGE wymusza odświeżenie z PSE po 13:00 gdy brak danych jutrzejszych
+
 ## [0.7.7] - 2026-04-11
 
 ### Naprawione

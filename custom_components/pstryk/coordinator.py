@@ -250,6 +250,7 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._session = session
         self.attribution = "Dane z PSE S.A. (api.raporty.pse.pl)"
         self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_tge_{entry_id}")
+        self._tomorrow_refresh_requested = False
 
     async def async_load_stored_data(self) -> None:
         """Load last known data from persistent storage."""
@@ -307,6 +308,7 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "current_price": current_price,
             "current_hour": current_hour,
         }
+        self._tomorrow_refresh_requested = False
         await self._store.async_save(result)
         return result
 
@@ -326,6 +328,16 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         updated["current_price"] = current_price
         updated["current_hour"] = current_hour
         self.async_set_updated_data(updated)
+
+        # If tomorrow data is missing after 13:00, request a refresh from PSE
+        if (
+            not self.data.get("tomorrow")
+            and current_hour >= 13
+            and not self._tomorrow_refresh_requested
+        ):
+            self._tomorrow_refresh_requested = True
+            _LOGGER.debug("Tomorrow RDN data missing after 13:00, requesting refresh")
+            self.hass.async_create_task(self.async_request_refresh())
 
 
 class PstrykBleBoxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
