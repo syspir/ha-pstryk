@@ -256,6 +256,19 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Load last known data from persistent storage."""
         stored = await self._store.async_load()
         if stored:
+            # Discard stale cache — if today's date doesn't match, start fresh
+            import zoneinfo
+            today_str = datetime.now(
+                zoneinfo.ZoneInfo("Europe/Warsaw"),
+            ).date().isoformat()
+            today_data = stored.get("today")
+            if not today_data or today_data.get("date") != today_str:
+                _LOGGER.info(
+                    "TGE RDN stored data is stale (date=%s, today=%s), discarding",
+                    today_data.get("date") if today_data else None,
+                    today_str,
+                )
+                return
             # JSON storage converts int keys to strings — normalize hours dicts
             for key in ("today", "tomorrow"):
                 day = stored.get(key)

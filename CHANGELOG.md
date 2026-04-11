@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.7] - 2026-04-12
+
+### Naprawione
+- Automatyczne odrzucanie nieaktualnego cache TGE RDN przy starcie HA — stare dane z innego dnia nie są już ładowane z persistent storage, koordynator czeka na świeży fetch
+
 ## [0.8.6] - 2026-04-12
 
 ### Naprawione
