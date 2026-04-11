@@ -1,5 +1,5 @@
 // Marcin Koźliński
-// Ostatnia modyfikacja: 2026-04-09 (v0.7.5)
+// Ostatnia modyfikacja: 2026-04-11
 
 function _getLitElement() {
   const candidates = ["hui-view", "ha-panel-lovelace", "home-assistant", "hc-lovelace"];
@@ -791,12 +791,12 @@ class PstrykPanel extends LitElement {
     const maxTomorrowHour = this._getAttr(maxTomorrowEntity, "hour");
 
     return html`
-      <div class="section-title">Ceny RDN (TGE — sprzedaż)</div>
+      <div class="section-title">Ceny RDN Fixing I (TGE — netto)</div>
       <div class="grid-full">
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:chart-bar"></ha-icon>
-            Ceny godzinowe RDN
+            Ceny godzinowe RDN Fixing I
           </div>
           ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour)}
         </ha-card>
@@ -805,7 +805,7 @@ class PstrykPanel extends LitElement {
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:currency-usd"></ha-icon>
-            Aktualna cena RDN
+            Aktualna cena RDN (netto)
           </div>
           <div class="live-price-main" style="border-bottom: none; color: var(--primary-text-color);">
             <div>

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.0] - 2026-04-11
+
+### Zmienione
+- Panel: etykiety sekcji TGE zaktualizowane — „Ceny RDN Fixing I (TGE — netto)", „Aktualna cena RDN (netto)"
+
 ## [0.7.9] - 2026-04-11
 
 ### Zmienione
