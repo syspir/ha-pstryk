@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.7] - 2026-04-11
+
+### Naprawione
+- Cena bieżąca TGE mogła pokazywać wartość z poprzedniego dnia — `recalculate_current` sprawdza teraz datę danych przed użyciem
+- Cena bieżąca Pricing — usunięty ślepy fallback `all_frames[-1]`, `_find_current_frame` zwraca najbliższą przeszłą ramkę zamiast `None`
+
+## [0.7.6] - 2026-04-11
+
+### Dodane
+- Wskaźniki TGE: cena ≤ 0, min/max dziś (±0,05), cena ≤ 2/3 średniej, cena < min+0,05, cena > max-0,05
+- Karta „Wskaźniki TGE" w panelu z badge'ami Tak/Nie i progami
+- Osobne urządzenie „TGE RDN" (PSE S.A.) dla sensorów giełdowych
+
 ## [0.7.1] - 2026-04-09
 
 ### Zmienione

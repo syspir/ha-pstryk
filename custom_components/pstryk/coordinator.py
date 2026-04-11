@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09
+# Ostatnia modyfikacja: 2026-04-11
 
 """Data update coordinators for Pstryk Energy."""
 
@@ -124,8 +124,13 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.debug("Restored pricing data from storage")
 
     def _find_current_frame(self, frames: list[dict]) -> dict | None:
-        """Find the frame matching current time based on start/end."""
+        """Find the frame matching current time based on start/end.
+
+        If no exact match, return the most recent past frame as fallback.
+        """
         now = datetime.now(timezone.utc)
+        best_past: dict | None = None
+        best_past_start: datetime | None = None
         for frame in frames:
             start = frame.get("start")
             end = frame.get("end")
@@ -135,9 +140,12 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     frame_end = datetime.fromisoformat(end.replace("Z", "+00:00"))
                     if frame_start <= now < frame_end:
                         return frame
+                    if frame_start <= now and (best_past_start is None or frame_start > best_past_start):
+                        best_past = frame
+                        best_past_start = frame_start
                 except (ValueError, TypeError):
                     continue
-        return None
+        return best_past
 
     def _process_data(self) -> dict[str, Any]:
         """Process stored raw data to determine current prices."""
@@ -149,7 +157,7 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         cheapest_upcoming = None
         most_expensive_upcoming = None
 
-        if all_frames and current_price:
+        if all_frames:
             now = datetime.now(timezone.utc)
             for frame in all_frames:
                 start = frame.get("start")
@@ -160,8 +168,6 @@ class PstrykPricingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             next_prices.append(frame)
                     except (ValueError, TypeError):
                         continue
-        elif all_frames:
-            current_price = all_frames[-1]
 
         if next_prices:
             cheapest_upcoming = min(
@@ -313,8 +319,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         current_hour = now.hour
         today = self.data["today"]
         current_price = None
-        if today and current_hour in today.get("hours", {}):
-            current_price = today["hours"][current_hour]
+        if today and today.get("date") == now.date().isoformat():
+            if current_hour in today.get("hours", {}):
+                current_price = today["hours"][current_hour]
         updated = dict(self.data)
         updated["current_price"] = current_price
         updated["current_hour"] = current_hour
