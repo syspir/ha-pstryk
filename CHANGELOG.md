@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.4] - 2026-04-11
+
+### Naprawione
+- Retry pobierania danych RDN na jutro — zamiast jednorazowej próby po 13:00, ponawiane co 15 minut aż dane się pojawią (TGE publikuje fixing ok. 13:30)
+
 ## [0.8.3] - 2026-04-11
 
 ### Zmienione
