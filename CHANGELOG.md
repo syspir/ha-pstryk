@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.9] - 2026-04-11
+
+### Zmienione
+- Źródło cen RDN zmienione z PSE RCE (rynek bilansujący) na TGE RDN Fixing I (aukcja dnia następnego) — ceny teraz zgodne z pstryk.pl/ceny
+- Atrybucja zmieniona z PSE S.A. na TGE S.A.
+
 ## [0.7.8] - 2026-04-11
 
 ### Naprawione

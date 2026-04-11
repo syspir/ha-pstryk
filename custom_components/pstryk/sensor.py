@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09 (v0.7.4)
+# Ostatnia modyfikacja: 2026-04-11
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -1046,9 +1046,9 @@ async def async_setup_entry(
         tge_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_tge")},
             name="TGE RDN",
-            manufacturer="PSE S.A.",
-            model="Rynek Dnia Następnego (RDN)",
-            configuration_url="https://api.raporty.pse.pl",
+            manufacturer="TGE S.A.",
+            model="RDN Fixing I",
+            configuration_url="https://tge.pl/energia-elektryczna-rdn",
         )
         for description in TGE_RDN_SENSORS:
             entities.append(

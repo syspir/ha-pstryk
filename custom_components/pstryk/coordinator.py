@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import PstrykApiClient, PstrykApiError, PstrykAuthError
 from .blebox import PstrykBleBoxClient, PstrykBleBoxError
 from .const import ATTRIBUTION, DOMAIN
-from .tge import TgeRdnError, aggregate_hourly, fetch_rce_prices
+from .tge import TgeRdnError, fetch_rdn_fixing
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=update_interval,
         )
         self._session = session
-        self.attribution = "Dane z PSE S.A. (api.raporty.pse.pl)"
+        self.attribution = "Dane z TGE S.A. (tge.pl) — RDN Fixing I"
         self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_tge_{entry_id}")
         self._tomorrow_refresh_requested = False
 
@@ -278,23 +278,20 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch RCE prices for today and tomorrow from PSE API."""
+        """Fetch RDN Fixing I prices for today and tomorrow from tge.pl."""
         import zoneinfo
         now = datetime.now(zoneinfo.ZoneInfo("Europe/Warsaw"))
         today = now.date()
         tomorrow = today + timedelta(days=1)
 
         try:
-            today_records = await fetch_rce_prices(self._session, today)
-            tomorrow_records = await fetch_rce_prices(self._session, tomorrow)
+            today_hourly = await fetch_rdn_fixing(self._session, today)
+            tomorrow_hourly = await fetch_rdn_fixing(self._session, tomorrow)
         except TgeRdnError as err:
             if self.data:
-                _LOGGER.warning("PSE RCE API error, keeping last data: %s", err)
+                _LOGGER.warning("TGE RDN error, keeping last data: %s", err)
                 return self.data
-            raise UpdateFailed(f"PSE RCE API error: {err}") from err
-
-        today_hourly = aggregate_hourly(today_records)
-        tomorrow_hourly = aggregate_hourly(tomorrow_records)
+            raise UpdateFailed(f"TGE RDN error: {err}") from err
 
         today_data = self._build_day_data(today_hourly, today.isoformat())
         tomorrow_data = self._build_day_data(tomorrow_hourly, tomorrow.isoformat())

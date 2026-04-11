@@ -1,72 +1,93 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09
+# Ostatnia modyfikacja: 2026-04-11
 
-"""TGE RDN electricity prices via PSE (api.raporty.pse.pl) JSON API."""
+"""TGE RDN Fixing I electricity prices scraped from tge.pl."""
 
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timedelta
+import re
+from datetime import date, timedelta
 from typing import Any
 
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
-PSE_RCE_URL = "https://api.raporty.pse.pl/api/rce-pln"
+TGE_RDN_URL = "https://tge.pl/energia-elektryczna-rdn"
 
 
 class TgeRdnError(Exception):
     """Error fetching TGE RDN data."""
 
 
-async def fetch_rce_prices(
+async def fetch_rdn_fixing(
     session: aiohttp.ClientSession,
     target_date: date,
-) -> list[dict[str, Any]]:
-    """Fetch RCE prices for a given date from PSE API.
+) -> dict[int, float]:
+    """Fetch RDN Fixing I hourly prices for target_date from tge.pl.
 
-    Returns list of dicts with keys: period, rce_pln, dtime, business_date.
-    Each entry is a 15-minute interval. Returns empty list if no data.
+    TGE publishes fixing for day D on session date D-1.
+    The page dateShow=D-1 contains rows like "YYYY-MM-DD_H01 | 60 | price".
+
+    Returns dict mapping hour (0-23) to price in PLN/kWh.
+    Returns empty dict if no data for target_date.
     """
-    params = {
-        "$filter": f"business_date eq '{target_date.isoformat()}'",
-    }
+    session_date = target_date - timedelta(days=1)
+    params = {"dateShow": session_date.strftime("%d-%m-%Y")}
+
     try:
         async with session.get(
-            PSE_RCE_URL,
+            TGE_RDN_URL,
             params=params,
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
             if response.status != 200:
-                raise TgeRdnError(f"PSE API returned HTTP {response.status}")
-            data = await response.json()
+                raise TgeRdnError(f"TGE returned HTTP {response.status}")
+            html = await response.text()
     except aiohttp.ClientError as err:
         raise TgeRdnError(f"Connection error: {err}") from err
 
-    return data.get("value", [])
+    return _parse_fixing_prices(html, target_date)
 
 
-def aggregate_hourly(records: list[dict[str, Any]]) -> dict[int, float]:
-    """Aggregate 15-min RCE records into hourly averages.
+def _parse_fixing_prices(html: str, target_date: date) -> dict[int, float]:
+    """Parse hourly Fixing I prices from TGE HTML table.
 
-    Returns dict mapping hour (0-23) to average price in PLN/MWh.
+    Looks for rows: <td>YYYY-MM-DD_HXX</td><td>60</td><td>price</td>
+    where duration=60 marks hourly (Fixing I) rows vs 15-min (Fixing II).
     """
-    hourly_sums: dict[int, list[float]] = {}
-    for rec in records:
-        price = rec.get("rce_pln")
-        if price is None:
-            continue
-        period = rec.get("period", "")
-        # period format: "HH:MM - HH:MM", first part is start
-        try:
-            hour = int(period.split(":")[0])
-        except (ValueError, IndexError):
-            continue
-        hourly_sums.setdefault(hour, []).append(price)
+    tds = re.findall(r"<td[^>]*>(.*?)</td>", html, re.DOTALL)
+    tds_clean = [re.sub(r"<[^>]+>", "", td).strip() for td in tds]
 
-    return {
-        hour: round(sum(prices) / len(prices) / 1000, 4)
-        for hour, prices in hourly_sums.items()
-        if prices
-    }
+    date_str = target_date.isoformat()
+    pattern = re.compile(rf"^{re.escape(date_str)}_H(\d+)$")
+    hourly: dict[int, float] = {}
+
+    for i, cell in enumerate(tds_clean):
+        m = pattern.match(cell)
+        if m and i + 2 < len(tds_clean) and tds_clean[i + 1] == "60":
+            hour_num = int(m.group(1))
+            hour = hour_num - 1  # H01 = 00:00, H24 = 23:00
+            price_raw = (
+                tds_clean[i + 2]
+                .replace("\xa0", "")
+                .replace(" ", "")
+                .replace(",", ".")
+            )
+            try:
+                price_mwh = float(price_raw)
+                hourly[hour] = round(price_mwh / 1000, 4)
+            except ValueError:
+                _LOGGER.warning(
+                    "Cannot parse TGE price for %s H%02d: %s",
+                    date_str, hour_num, price_raw,
+                )
+
+    if hourly:
+        _LOGGER.debug(
+            "Parsed %d hourly TGE RDN Fixing I prices for %s",
+            len(hourly), date_str,
+        )
+
+    return hourly
