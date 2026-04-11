@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.3] - 2026-04-11
+
+### Zmienione
+- Ceny TGE RDN zaokrąglane w dół (floor) zamiast standardowego zaokrąglenia, ujemne ceny ustawiane na 0,00
+- Osobny wykres słupkowy cen godzinowych RDN na jutro (widoczny gdy dane dostępne)
+
+### Naprawione
+- Brakujące tłumaczenia 6 nowych sensorów TGE RDN (min/max ±0,05, cena0, avg 2/3, wskaźniki progowe) w pl.json i en.json — sensory mogły nie wyświetlać danych w panelu
+
 ## [0.8.2] - 2026-04-11
 
 ### Zmienione

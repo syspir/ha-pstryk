@@ -800,6 +800,15 @@ class PstrykPanel extends LitElement {
           </div>
           ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour)}
         </ha-card>
+        ${tomorrowAvailable && forecastTomorrow.length ? html`
+          <ha-card>
+            <div class="card-header">
+              <ha-icon icon="mdi:chart-bar"></ha-icon>
+              Ceny godzinowe RDN Jutro
+            </div>
+            ${this._renderTgeRdnChart(forecastTomorrow, [], -1)}
+          </ha-card>
+        ` : ""}
       </div>
       <div class="grid">
         <ha-card>

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import re
 from datetime import date, timedelta
 from typing import Any
@@ -78,7 +79,8 @@ def _parse_fixing_prices(html: str, target_date: date) -> dict[int, float]:
             try:
                 price_mwh = float(price_raw)
                 price_net = price_mwh / 1000
-                hourly[hour] = round(price_net * 1.23, 2)
+                gross = math.floor(price_net * 1.23 * 100) / 100
+                hourly[hour] = max(gross, 0.0)
             except ValueError:
                 _LOGGER.warning(
                     "Cannot parse TGE price for %s H%02d: %s",
