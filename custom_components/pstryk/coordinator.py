@@ -300,6 +300,15 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return self.data
             raise UpdateFailed(f"TGE RDN error: {err}") from err
 
+        # If parser returned empty data for today, keep existing data
+        if not today_hourly:
+            if self.data:
+                _LOGGER.warning(
+                    "TGE RDN: no hourly data parsed for %s, keeping last data", today,
+                )
+                return self.data
+            raise UpdateFailed(f"TGE RDN: no data for {today}")
+
         today_data = self._build_day_data(today_hourly, today.isoformat())
         tomorrow_data = self._build_day_data(tomorrow_hourly, tomorrow.isoformat())
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.6] - 2026-04-12
+
+### Naprawione
+- Obsługa timeout przy pobieraniu danych z TGE — `asyncio.TimeoutError` nie był łapany, co powodowało utratę fallbacku na ostatnie znane dane
+- Ochrona przed nadpisaniem dobrych danych pustymi — gdy parser TGE zwróci pusty wynik (zmiana HTML, błąd sieci), koordynator zachowuje ostatnie znane dane zamiast je kasować
+
 ## [0.8.5] - 2026-04-12
 
 ### Naprawione

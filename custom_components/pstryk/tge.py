@@ -1,10 +1,11 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-11
+# Ostatnia modyfikacja: 2026-04-12
 
 """TGE RDN Fixing I electricity prices scraped from tge.pl."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 import re
@@ -46,6 +47,8 @@ async def fetch_rdn_fixing(
             if response.status != 200:
                 raise TgeRdnError(f"TGE returned HTTP {response.status}")
             html = await response.text()
+    except asyncio.TimeoutError as err:
+        raise TgeRdnError(f"Timeout fetching TGE data for {target_date}") from err
     except aiohttp.ClientError as err:
         raise TgeRdnError(f"Connection error: {err}") from err
 
