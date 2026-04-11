@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.1] - 2026-04-11
+
+### Naprawione
+- Sensory TGE RDN „nieznany" — JSON storage konwertuje klucze int na stringi, co powodowało brak dopasowania bieżącej godziny; naprawione normalizowanie kluczy hours przy wczytywaniu z storage i w recalculate_current
+
 ## [0.8.0] - 2026-04-11
 
 ### Zmienione

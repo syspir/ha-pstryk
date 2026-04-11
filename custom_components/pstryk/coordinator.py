@@ -256,6 +256,11 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Load last known data from persistent storage."""
         stored = await self._store.async_load()
         if stored:
+            # JSON storage converts int keys to strings — normalize hours dicts
+            for key in ("today", "tomorrow"):
+                day = stored.get(key)
+                if day and "hours" in day:
+                    day["hours"] = {int(k): v for k, v in day["hours"].items()}
             self.async_set_updated_data(stored)
             _LOGGER.debug("Restored TGE RDN data from storage")
 
@@ -266,6 +271,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Build structured day data from hourly prices."""
         if not hourly:
             return None
+        # Normalize keys to int (JSON storage converts int keys to strings)
+        hourly = {int(k): v for k, v in hourly.items()}
         min_hour = min(hourly, key=hourly.get)
         max_hour = max(hourly, key=hourly.get)
         return {
@@ -319,8 +326,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         today = self.data["today"]
         current_price = None
         if today and today.get("date") == now.date().isoformat():
-            if current_hour in today.get("hours", {}):
-                current_price = today["hours"][current_hour]
+            hours = today.get("hours", {})
+            # JSON storage converts int keys to strings — check both
+            current_price = hours.get(current_hour) or hours.get(str(current_hour))
         updated = dict(self.data)
         updated["current_price"] = current_price
         updated["current_hour"] = current_hour
