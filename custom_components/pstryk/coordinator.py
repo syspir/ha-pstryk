@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-11
+# Ostatnia modyfikacja: 2026-04-12
 
 """Data update coordinators for Pstryk Energy."""
 
@@ -312,38 +312,48 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "current_price": current_price,
             "current_hour": current_hour,
         }
-        self._tomorrow_last_retry = None
+        if tomorrow_data:
+            self._tomorrow_last_retry = None
         await self._store.async_save(result)
         return result
 
     def recalculate_current(self) -> None:
         """Recalculate current hour price from stored data (no fetch)."""
-        if not self.data or not self.data.get("today"):
+        if not self.data:
             return
         import zoneinfo
         now = datetime.now(zoneinfo.ZoneInfo("Europe/Warsaw"))
+        today_str = now.date().isoformat()
+        tomorrow_str = (now.date() + timedelta(days=1)).isoformat()
         current_hour = now.hour
-        today = self.data["today"]
+
+        today = self.data.get("today")
         current_price = None
-        if today and today.get("date") == now.date().isoformat():
+        if today and today.get("date") == today_str:
             hours = today.get("hours", {})
-            # JSON storage converts int keys to strings — check both
-            current_price = hours.get(current_hour) or hours.get(str(current_hour))
+            current_price = hours.get(current_hour)
+            if current_price is None:
+                current_price = hours.get(str(current_hour))
+
         updated = dict(self.data)
         updated["current_price"] = current_price
         updated["current_hour"] = current_hour
         self.async_set_updated_data(updated)
 
-        # If tomorrow data is missing after 13:00, request refresh every 15 min
-        if (
-            not self.data.get("tomorrow")
-            and current_hour >= 13
-        ):
-            now_ts = datetime.now(zoneinfo.ZoneInfo("Europe/Warsaw"))
+        # Refresh needed: today data stale/missing, or tomorrow missing after 13:00
+        need_refresh = False
+        if not today or today.get("date") != today_str:
+            need_refresh = True
+        elif current_hour >= 13:
+            tom = self.data.get("tomorrow")
+            if not tom or tom.get("date") != tomorrow_str:
+                need_refresh = True
+
+        if need_refresh:
             last = getattr(self, "_tomorrow_last_retry", None)
-            if last is None or (now_ts - last).total_seconds() >= 900:
-                self._tomorrow_last_retry = now_ts
-                _LOGGER.debug("Tomorrow RDN data missing after 13:00, requesting refresh")
+            if last is None or (now - last).total_seconds() >= 900:
+                self._tomorrow_last_retry = now
+                _LOGGER.debug("TGE RDN data stale/missing, requesting refresh")
                 self.hass.async_create_task(self.async_request_refresh())
 
 

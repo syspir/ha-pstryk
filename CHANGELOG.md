@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.5] - 2026-04-12
+
+### Naprawione
+- Sensory TGE RDN zależne od bieżącej ceny (cena bieżąca, cena0, ≤2/3 średniej, <Min+0,05, >Max-0,05) pokazywały „nieznany" gdy cena godziny wynosiła 0,00 PLN/kWh — operator `or` traktował zero jako brak wartości
+- Logika odświeżania danych TGE RDN — wykrywanie nieaktualnych danych dzisiejszych i jutrzejszych z weryfikacją daty
+
 ## [0.8.4] - 2026-04-11
 
 ### Naprawione
