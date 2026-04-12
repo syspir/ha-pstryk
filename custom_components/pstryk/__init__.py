@@ -24,8 +24,14 @@ from .const import (
     CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
+    CONF_TGE_AVG_PERCENT,
+    CONF_TGE_DELTA_MAX,
+    CONF_TGE_DELTA_MIN,
     CONF_TIMEZONE,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TGE_AVG_PERCENT,
+    DEFAULT_TGE_DELTA_MAX,
+    DEFAULT_TGE_DELTA_MIN,
     DEFAULT_TIMEZONE,
     DOMAIN,
     PANEL_ICON,
@@ -69,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=22",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=23",
                 }
             },
             require_admin=False,
@@ -107,11 +113,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_id=entry.entry_id,
     )
 
+    tge_delta_min = entry.options.get(CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN) / 100
+    tge_delta_max = entry.options.get(CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX) / 100
+    tge_avg_percent = entry.options.get(CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT)
+
     tge_coordinator = PstrykTgeCoordinator(
         hass=hass,
         session=session,
         update_interval=UPDATE_INTERVAL_TGE,
         entry_id=entry.entry_id,
+        delta_min=tge_delta_min,
+        delta_max=tge_delta_max,
+        avg_percent=tge_avg_percent,
     )
 
     # Restore last known data from storage (sensors available immediately)

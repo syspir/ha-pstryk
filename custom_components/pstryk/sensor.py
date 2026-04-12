@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-11
+# Ostatnia modyfikacja: 2026-04-12
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -63,66 +63,75 @@ def _safe_get(data: dict, *keys: str, default: Any = None) -> Any:
     return current
 
 
-def _round05(value: float | None) -> float | None:
-    """Round value to nearest 0.05."""
-    if value is None:
+def _round_delta(value: float | None, delta: float) -> float | None:
+    """Round value to nearest delta."""
+    if value is None or delta <= 0:
         return None
-    return round(round(value / 0.05) * 0.05, 2)
+    return round(round(value / delta) * delta, 4)
 
 
-def _tge_cena_lt_avg23(data: dict) -> int | None:
-    """Return 1 if current price <= avg_today * 2/3, else 0."""
+def _tge_cena_lt_avg(data: dict) -> int | None:
+    """Return 1 if current price <= avg_today * (avg_percent/100), else 0."""
     price = data.get("current_price")
     hours = _safe_get(data, "today", "hours") or {}
     if price is None or not hours:
         return None
     avg = sum(hours.values()) / len(hours)
-    return 1 if price <= avg * 2 / 3 else 0
+    pct = data.get("avg_percent", 67) / 100
+    return 1 if price <= avg * pct else 0
 
 
-def _tge_cena_lt_avg23_attrs(data: dict) -> dict:
+def _tge_cena_lt_avg_attrs(data: dict) -> dict:
     hours = _safe_get(data, "today", "hours") or {}
     avg = sum(hours.values()) / len(hours) if hours else None
+    pct = data.get("avg_percent", 67)
     return {
         "current_price": data.get("current_price"),
         "avg_today": round(avg, 2) if avg is not None else None,
-        "threshold_2_3_avg": round(avg * 2 / 3, 2) if avg is not None else None,
+        "avg_percent": pct,
+        "threshold": round(avg * pct / 100, 2) if avg is not None else None,
     }
 
 
-def _tge_cena_lt_min05(data: dict) -> int | None:
-    """Return 1 if current price < min_today + 0.05, else 0."""
+def _tge_cena_lt_min_delta(data: dict) -> int | None:
+    """Return 1 if current price < min_today + delta_min, else 0."""
     price = data.get("current_price")
     min_price = _safe_get(data, "today", "min_price")
     if price is None or min_price is None:
         return None
-    return 1 if price < min_price + 0.05 else 0
+    delta = data.get("delta_min", 0.05)
+    return 1 if price < min_price + delta else 0
 
 
-def _tge_cena_lt_min05_attrs(data: dict) -> dict:
+def _tge_cena_lt_min_delta_attrs(data: dict) -> dict:
     min_price = _safe_get(data, "today", "min_price")
+    delta = data.get("delta_min", 0.05)
     return {
         "current_price": data.get("current_price"),
         "min_today": min_price,
-        "threshold": round(min_price + 0.05, 2) if min_price is not None else None,
+        "delta": delta,
+        "threshold": round(min_price + delta, 4) if min_price is not None else None,
     }
 
 
-def _tge_cena_gt_max05(data: dict) -> int | None:
-    """Return 1 if current price > max_today - 0.05, else 0."""
+def _tge_cena_gt_max_delta(data: dict) -> int | None:
+    """Return 1 if current price > max_today - delta_max, else 0."""
     price = data.get("current_price")
     max_price = _safe_get(data, "today", "max_price")
     if price is None or max_price is None:
         return None
-    return 1 if price > max_price - 0.05 else 0
+    delta = data.get("delta_max", 0.05)
+    return 1 if price > max_price - delta else 0
 
 
-def _tge_cena_gt_max05_attrs(data: dict) -> dict:
+def _tge_cena_gt_max_delta_attrs(data: dict) -> dict:
     max_price = _safe_get(data, "today", "max_price")
+    delta = data.get("delta_max", 0.05)
     return {
         "current_price": data.get("current_price"),
         "max_today": max_price,
-        "threshold": round(max_price - 0.05, 2) if max_price is not None else None,
+        "delta": delta,
+        "threshold": round(max_price - delta, 4) if max_price is not None else None,
     }
 
 
@@ -571,6 +580,9 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
                 for h, p in sorted((_safe_get(data, "tomorrow", "hours") or {}).items())
             ] if data.get("tomorrow") else [],
             "tomorrow_available": data.get("tomorrow") is not None,
+            "delta_min": data.get("delta_min", 0.05),
+            "delta_max": data.get("delta_max", 0.05),
+            "avg_percent": data.get("avg_percent", 67),
         },
     ),
     PstrykSensorEntityDescription(
@@ -659,10 +671,14 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         icon="mdi:arrow-down-bold",
         coordinator_type="tge",
-        value_fn=lambda data: _round05(_safe_get(data, "today", "min_price")),
+        value_fn=lambda data: _round_delta(
+            _safe_get(data, "today", "min_price"),
+            data.get("delta_min", 0.05),
+        ),
         extra_attrs_fn=lambda data: {
             "hour": _safe_get(data, "today", "min_hour"),
             "date": _safe_get(data, "today", "date"),
+            "delta": data.get("delta_min", 0.05),
         },
     ),
     PstrykSensorEntityDescription(
@@ -674,10 +690,14 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         icon="mdi:arrow-up-bold",
         coordinator_type="tge",
-        value_fn=lambda data: _round05(_safe_get(data, "today", "max_price")),
+        value_fn=lambda data: _round_delta(
+            _safe_get(data, "today", "max_price"),
+            data.get("delta_max", 0.05),
+        ),
         extra_attrs_fn=lambda data: {
             "hour": _safe_get(data, "today", "max_hour"),
             "date": _safe_get(data, "today", "date"),
+            "delta": data.get("delta_max", 0.05),
         },
     ),
     PstrykSensorEntityDescription(
@@ -688,8 +708,8 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         icon="mdi:approximately-equal-box",
         coordinator_type="tge",
-        value_fn=_tge_cena_lt_avg23,
-        extra_attrs_fn=_tge_cena_lt_avg23_attrs,
+        value_fn=_tge_cena_lt_avg,
+        extra_attrs_fn=_tge_cena_lt_avg_attrs,
     ),
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_lt_min05",
@@ -699,8 +719,8 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         icon="mdi:arrow-down-circle-outline",
         coordinator_type="tge",
-        value_fn=_tge_cena_lt_min05,
-        extra_attrs_fn=_tge_cena_lt_min05_attrs,
+        value_fn=_tge_cena_lt_min_delta,
+        extra_attrs_fn=_tge_cena_lt_min_delta_attrs,
     ),
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_gt_max05",
@@ -710,8 +730,8 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         icon="mdi:arrow-up-circle-outline",
         coordinator_type="tge",
-        value_fn=_tge_cena_gt_max05,
-        extra_attrs_fn=_tge_cena_gt_max05_attrs,
+        value_fn=_tge_cena_gt_max_delta,
+        extra_attrs_fn=_tge_cena_gt_max_delta_attrs,
     ),
 )
 

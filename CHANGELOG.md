@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.0] - 2026-04-12
+
+### Dodane
+- Konfigurowalne progi wskaźników TGE w opcjach integracji: delta ceny min (grosze), delta ceny max (grosze), próg procentowy średniej dnia
+- Panel wyświetla dynamicznie skonfigurowane wartości progów zamiast hardkodowanych
+
+### Zmienione
+- Sensory wskaźnikowe TGE (Min±delta, Max±delta, Cena < Min+delta, Cena > Max-delta, Cena ≤ X% średniej) używają wartości z konfiguracji zamiast stałych 0,05 PLN i 2/3
+- Koordynator TGE przekazuje parametry konfiguracji w danych do sensorów i panelu
+
 ## [0.8.9] - 2026-04-12
 
 ### Naprawione

@@ -239,6 +239,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         session,
         update_interval: timedelta,
         entry_id: str,
+        delta_min: float = 0.05,
+        delta_max: float = 0.05,
+        avg_percent: int = 67,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -251,6 +254,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.attribution = "Dane z TGE S.A. (tge.pl) — RDN Fixing I"
         self._store = Store(hass, _STORE_VERSION, f"{DOMAIN}_tge_{entry_id}")
         self._tomorrow_last_retry = None
+        self.delta_min = delta_min
+        self.delta_max = delta_max
+        self.avg_percent = avg_percent
 
     async def async_load_stored_data(self) -> None:
         """Load last known data from persistent storage."""
@@ -333,6 +339,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "tomorrow": tomorrow_data,
             "current_price": current_price,
             "current_hour": current_hour,
+            "delta_min": self.delta_min,
+            "delta_max": self.delta_max,
+            "avg_percent": self.avg_percent,
         }
         if tomorrow_data:
             self._tomorrow_last_retry = None
@@ -360,6 +369,9 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         updated = dict(self.data)
         updated["current_price"] = current_price
         updated["current_hour"] = current_hour
+        updated["delta_min"] = self.delta_min
+        updated["delta_max"] = self.delta_max
+        updated["avg_percent"] = self.avg_percent
         self.async_set_updated_data(updated)
 
         # Refresh needed: today data stale/missing, or tomorrow missing after 13:00

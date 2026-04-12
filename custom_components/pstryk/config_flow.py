@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-09
+# Ostatnia modyfikacja: 2026-04-12
 
 """Config flow for Pstryk Energy integration."""
 
@@ -25,9 +25,15 @@ from .const import (
     CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
+    CONF_TGE_AVG_PERCENT,
+    CONF_TGE_DELTA_MAX,
+    CONF_TGE_DELTA_MIN,
     CONF_TIMEZONE,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TGE_AVG_PERCENT,
+    DEFAULT_TGE_DELTA_MAX,
+    DEFAULT_TGE_DELTA_MIN,
     DEFAULT_TIMEZONE,
     DOMAIN,
 )
@@ -203,6 +209,24 @@ class PstrykOptionsFlow(OptionsFlow):
                         CONF_BLEBOX_IP,
                         default=current_blebox_ip,
                     ): str,
+                    vol.Optional(
+                        CONF_TGE_DELTA_MIN,
+                        default=self.config_entry.options.get(
+                            CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
+                    vol.Optional(
+                        CONF_TGE_DELTA_MAX,
+                        default=self.config_entry.options.get(
+                            CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
+                    vol.Optional(
+                        CONF_TGE_AVG_PERCENT,
+                        default=self.config_entry.options.get(
+                            CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                 }
             ),
             errors=errors,

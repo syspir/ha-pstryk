@@ -1,5 +1,5 @@
 // Marcin Koźliński
-// Ostatnia modyfikacja: 2026-04-11
+// Ostatnia modyfikacja: 2026-04-12
 
 function _getLitElement() {
   const candidates = ["hui-view", "ha-panel-lovelace", "home-assistant", "hc-lovelace"];
@@ -776,6 +776,9 @@ class PstrykPanel extends LitElement {
     const forecastToday = this._getAttr(currentEntity, "price_forecast_today") || [];
     const forecastTomorrow = this._getAttr(currentEntity, "price_forecast_tomorrow") || [];
     const tomorrowAvailable = this._getAttr(currentEntity, "tomorrow_available");
+    const deltaMin = this._getAttr(currentEntity, "delta_min") ?? 0.05;
+    const deltaMax = this._getAttr(currentEntity, "delta_max") ?? 0.05;
+    const avgPercent = this._getAttr(currentEntity, "avg_percent") ?? 67;
 
     const minTodayHour = this._getAttr(minTodayEntity, "hour");
     const maxTodayHour = this._getAttr(maxTodayEntity, "hour");
@@ -872,30 +875,33 @@ class PstrykPanel extends LitElement {
             </div>
           </ha-card>
         ` : ""}
-        ${this._renderTgeIndicatorsCard(currentPrice, this._getState(minTodayEntity), this._getState(maxTodayEntity), forecastToday, unit)}
+        ${this._renderTgeIndicatorsCard(currentPrice, this._getState(minTodayEntity), this._getState(maxTodayEntity), forecastToday, unit, deltaMin, deltaMax, avgPercent)}
       </div>
     `;
   }
 
-  _renderTgeIndicatorsCard(currentPrice, minTodayStr, maxTodayStr, forecastToday, unit) {
+  _renderTgeIndicatorsCard(currentPrice, minTodayStr, maxTodayStr, forecastToday, unit, deltaMin, deltaMax, avgPercent) {
     const cur = currentPrice !== null ? parseFloat(currentPrice) : NaN;
     const minToday = minTodayStr !== null ? parseFloat(minTodayStr) : NaN;
     const maxToday = maxTodayStr !== null ? parseFloat(maxTodayStr) : NaN;
     const prices = (forecastToday || []).map(f => f.price).filter(p => p != null);
     const avgVal = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : NaN;
+    const avgPct = (avgPercent || 67) / 100;
+    const dMin = deltaMin || 0.05;
+    const dMax = deltaMax || 0.05;
 
-    const round05 = (v) => isNaN(v) ? null : (Math.round(v / 0.05) * 0.05).toFixed(2);
+    const roundDelta = (v, d) => isNaN(v) || d <= 0 ? null : (Math.round(v / d) * d).toFixed(2);
 
     const cena0 = isNaN(cur) ? null : (cur <= 0 ? "1" : "0");
-    const avgE23 = (isNaN(cur) || isNaN(avgVal)) ? null : (cur <= avgVal * 2 / 3 ? "1" : "0");
-    const minR05 = round05(minToday);
-    const maxR05 = round05(maxToday);
-    const ltMin05 = (isNaN(cur) || isNaN(minToday)) ? null : (cur < minToday + 0.05 ? "1" : "0");
-    const gtMax05 = (isNaN(cur) || isNaN(maxToday)) ? null : (cur > maxToday - 0.05 ? "1" : "0");
+    const avgE23 = (isNaN(cur) || isNaN(avgVal)) ? null : (cur <= avgVal * avgPct ? "1" : "0");
+    const minR05 = roundDelta(minToday, dMin);
+    const maxR05 = roundDelta(maxToday, dMax);
+    const ltMin05 = (isNaN(cur) || isNaN(minToday)) ? null : (cur < minToday + dMin ? "1" : "0");
+    const gtMax05 = (isNaN(cur) || isNaN(maxToday)) ? null : (cur > maxToday - dMax ? "1" : "0");
     const avgToday = isNaN(avgVal) ? null : avgVal.toFixed(4);
-    const threshold = isNaN(avgVal) ? null : (avgVal * 2 / 3).toFixed(4);
-    const minThreshold = isNaN(minToday) ? null : (minToday + 0.05).toFixed(4);
-    const maxThreshold = isNaN(maxToday) ? null : (maxToday - 0.05).toFixed(4);
+    const threshold = isNaN(avgVal) ? null : (avgVal * avgPct).toFixed(4);
+    const minThreshold = isNaN(minToday) ? null : (minToday + dMin).toFixed(4);
+    const maxThreshold = isNaN(maxToday) ? null : (maxToday - dMax).toFixed(4);
 
     const _badge = (val) => {
       if (val === null) return html`<span class="metric-unit">---</span>`;
@@ -919,7 +925,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:approximately-equal-box"></ha-icon>
-            Cena ≤ 2/3 średniej dnia
+            Cena ≤ ${avgPercent || 67}% średniej dnia
           </span>
           ${_badge(avgE23)}
         </div>
@@ -936,7 +942,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:ray-vertex"></ha-icon>
-            Próg 2/3 średniej
+            Próg ${avgPercent || 67}% średniej
           </span>
           <span class="metric-value">
             ${threshold != null ? Number(threshold).toFixed(4) : "---"}
@@ -946,7 +952,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
-            Min dziś (±0,05)
+            Min dziś (±${(dMin * 100).toFixed(0)} gr)
           </span>
           <span class="metric-value">
             ${minR05 !== null ? minR05 : "---"}
@@ -956,7 +962,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
-            Max dziś (±0,05)
+            Max dziś (±${(dMax * 100).toFixed(0)} gr)
           </span>
           <span class="metric-value">
             ${maxR05 !== null ? maxR05 : "---"}
@@ -966,14 +972,14 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-down-circle-outline"></ha-icon>
-            Cena &lt; Min+0,05 ${minThreshold != null ? `(próg: ${Number(minThreshold).toFixed(4)})` : ""}
+            Cena &lt; Min+${(dMin * 100).toFixed(0)} gr ${minThreshold != null ? `(próg: ${Number(minThreshold).toFixed(4)})` : ""}
           </span>
           ${_badge(ltMin05)}
         </div>
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-up-circle-outline"></ha-icon>
-            Cena &gt; Max−0,05 ${maxThreshold != null ? `(próg: ${Number(maxThreshold).toFixed(4)})` : ""}
+            Cena &gt; Max−${(dMax * 100).toFixed(0)} gr ${maxThreshold != null ? `(próg: ${Number(maxThreshold).toFixed(4)})` : ""}
           </span>
           ${_badge(gtMax05)}
         </div>
