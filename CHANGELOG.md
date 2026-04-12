@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] - 2026-04-12
+
+### Naprawione
+- Zmiana progów TGE w opcjach nie była widoczna w panelu do następnego fetcha — wartości delta/avg_percent były zapisywane do persistent storage i po przeładowaniu integracji wczytywane stamtąd zamiast z aktualnej konfiguracji
+
 ## [0.9.0] - 2026-04-12
 
 ### Dodane

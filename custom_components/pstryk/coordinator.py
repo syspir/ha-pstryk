@@ -280,6 +280,10 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 day = stored.get(key)
                 if day and "hours" in day:
                     day["hours"] = {int(k): v for k, v in day["hours"].items()}
+            # Config values always from coordinator instance, not storage
+            stored["delta_min"] = self.delta_min
+            stored["delta_max"] = self.delta_max
+            stored["avg_percent"] = self.avg_percent
             self.async_set_updated_data(stored)
             _LOGGER.debug("Restored TGE RDN data from storage")
 
@@ -339,13 +343,13 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "tomorrow": tomorrow_data,
             "current_price": current_price,
             "current_hour": current_hour,
-            "delta_min": self.delta_min,
-            "delta_max": self.delta_max,
-            "avg_percent": self.avg_percent,
         }
         if tomorrow_data:
             self._tomorrow_last_retry = None
         await self._store.async_save(result)
+        result["delta_min"] = self.delta_min
+        result["delta_max"] = self.delta_max
+        result["avg_percent"] = self.avg_percent
         return result
 
     def recalculate_current(self) -> None:
