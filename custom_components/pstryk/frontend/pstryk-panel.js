@@ -890,12 +890,8 @@ class PstrykPanel extends LitElement {
     const dMin = deltaMin || 0.05;
     const dMax = deltaMax || 0.05;
 
-    const roundDelta = (v, d) => isNaN(v) || d <= 0 ? null : (Math.round(v / d) * d).toFixed(2);
-
     const cena0 = isNaN(cur) ? null : (cur <= 0 ? "1" : "0");
     const avgE23 = (isNaN(cur) || isNaN(avgVal)) ? null : (cur <= avgVal * avgPct ? "1" : "0");
-    const minR05 = roundDelta(minToday, dMin);
-    const maxR05 = roundDelta(maxToday, dMax);
     const ltMin05 = (isNaN(cur) || isNaN(minToday)) ? null : (cur < minToday + dMin ? "1" : "0");
     const gtMax05 = (isNaN(cur) || isNaN(maxToday)) ? null : (cur > maxToday - dMax ? "1" : "0");
     const avgToday = isNaN(avgVal) ? null : avgVal.toFixed(4);
@@ -946,26 +942,6 @@ class PstrykPanel extends LitElement {
           </span>
           <span class="metric-value">
             ${threshold != null ? Number(threshold).toFixed(4) : "---"}
-            <span class="metric-unit">${unit}</span>
-          </span>
-        </div>
-        <div class="metric">
-          <span class="metric-label">
-            <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
-            Min dziś (+${(dMin * 100).toFixed(0)} gr)
-          </span>
-          <span class="metric-value">
-            ${minR05 !== null ? minR05 : "---"}
-            <span class="metric-unit">${unit}</span>
-          </span>
-        </div>
-        <div class="metric">
-          <span class="metric-label">
-            <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
-            Max dziś (−${(dMax * 100).toFixed(0)} gr)
-          </span>
-          <span class="metric-value">
-            ${maxR05 !== null ? maxR05 : "---"}
             <span class="metric-unit">${unit}</span>
           </span>
         </div>

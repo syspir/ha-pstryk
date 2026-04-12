@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.7] - 2026-04-12
+
+### Usunięte
+- Wiersze „Min dziś" i „Max dziś" z zaokrągleniem do delty z karty Wskaźniki TGE w panelu — redundantne z kolorowaniem wykresu
+
 ## [0.9.6] - 2026-04-12
 
 ### Dodane
