@@ -16,6 +16,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig, NumberSelectorMode
 
 from .api import PstrykApiClient, PstrykAuthError, PstrykConnectionError
 from .blebox import PstrykBleBoxClient
@@ -217,19 +218,28 @@ class PstrykOptionsFlow(OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
+                    ): NumberSelector(NumberSelectorConfig(
+                        min=0, max=50, step=1, mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="gr",
+                    )),
                     vol.Required(
                         CONF_TGE_DELTA_MAX,
                         default=self.config_entry.options.get(
                             CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
+                    ): NumberSelector(NumberSelectorConfig(
+                        min=0, max=50, step=1, mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="gr",
+                    )),
                     vol.Required(
                         CONF_TGE_AVG_PERCENT,
                         default=self.config_entry.options.get(
                             CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                    ): NumberSelector(NumberSelectorConfig(
+                        min=1, max=100, step=1, mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="%",
+                    )),
                 }
             ),
             errors=errors,

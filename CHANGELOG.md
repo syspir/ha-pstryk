@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.4] - 2026-04-12
+
+### Naprawione
+- Błąd przy zapisie opcji progów TGE — zamieniono vol.Coerce(int) na NumberSelector z dedykowanym polem liczbowym i jednostkami (gr, %), dodano zabezpieczenie przed nieprawidłowym typem wartości przy odczycie opcji
+
 ## [0.9.3] - 2026-04-12
 
 ### Naprawione

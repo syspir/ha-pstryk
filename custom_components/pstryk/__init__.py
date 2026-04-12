@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=24",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=25",
                 }
             },
             require_admin=False,
@@ -113,9 +113,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_id=entry.entry_id,
     )
 
-    tge_delta_min = entry.options.get(CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN) / 100
-    tge_delta_max = entry.options.get(CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX) / 100
-    tge_avg_percent = entry.options.get(CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT)
+    try:
+        tge_delta_min = int(entry.options.get(CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN)) / 100
+    except (TypeError, ValueError):
+        tge_delta_min = DEFAULT_TGE_DELTA_MIN / 100
+    try:
+        tge_delta_max = int(entry.options.get(CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX)) / 100
+    except (TypeError, ValueError):
+        tge_delta_max = DEFAULT_TGE_DELTA_MAX / 100
+    try:
+        tge_avg_percent = int(entry.options.get(CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT))
+    except (TypeError, ValueError):
+        tge_avg_percent = DEFAULT_TGE_AVG_PERCENT
+
+    _LOGGER.debug(
+        "TGE config: delta_min=%s, delta_max=%s, avg_percent=%s (raw options: %s)",
+        tge_delta_min, tge_delta_max, tge_avg_percent,
+        {k: v for k, v in entry.options.items() if k.startswith("tge_")},
+    )
 
     tge_coordinator = PstrykTgeCoordinator(
         hass=hass,
