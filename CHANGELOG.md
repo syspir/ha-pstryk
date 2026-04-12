@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.3] - 2026-04-12
+
+### Naprawione
+- Opcje progów TGE nie były zapisywane po zatwierdzeniu — pola zmienione z vol.Optional na vol.Required, dodane wartości domyślne TGE do początkowej konfiguracji
+
 ## [0.9.2] - 2026-04-12
 
 ### Naprawione

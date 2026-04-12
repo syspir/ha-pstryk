@@ -96,6 +96,9 @@ class PstrykConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_SCAN_INTERVAL_MINUTES: user_input.get(
                                     CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL
                                 ),
+                                CONF_TGE_DELTA_MIN: DEFAULT_TGE_DELTA_MIN,
+                                CONF_TGE_DELTA_MAX: DEFAULT_TGE_DELTA_MAX,
+                                CONF_TGE_AVG_PERCENT: DEFAULT_TGE_AVG_PERCENT,
                             },
                         )
             except PstrykConnectionError:
@@ -209,19 +212,19 @@ class PstrykOptionsFlow(OptionsFlow):
                         CONF_BLEBOX_IP,
                         default=current_blebox_ip,
                     ): str,
-                    vol.Optional(
+                    vol.Required(
                         CONF_TGE_DELTA_MIN,
                         default=self.config_entry.options.get(
                             CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
-                    vol.Optional(
+                    vol.Required(
                         CONF_TGE_DELTA_MAX,
                         default=self.config_entry.options.get(
                             CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=50)),
-                    vol.Optional(
+                    vol.Required(
                         CONF_TGE_AVG_PERCENT,
                         default=self.config_entry.options.get(
                             CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT
