@@ -793,7 +793,7 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:chart-bar"></ha-icon>
             Ceny godzinowe RDN Fixing I
           </div>
-          ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour)}
+          ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin, deltaMax)}
         </ha-card>
         ${tomorrowAvailable && forecastTomorrow.length ? html`
           <ha-card>
@@ -801,7 +801,7 @@ class PstrykPanel extends LitElement {
               <ha-icon icon="mdi:chart-bar"></ha-icon>
               Ceny godzinowe RDN Jutro
             </div>
-            ${this._renderTgeRdnChart(forecastTomorrow, [], -1)}
+            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax)}
           </ha-card>
         ` : ""}
       </div>
@@ -987,7 +987,7 @@ class PstrykPanel extends LitElement {
     `;
   }
 
-  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour) {
+  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05) {
     const allEntries = [];
     const now = new Date();
 
@@ -1048,8 +1048,8 @@ class PstrykPanel extends LitElement {
               const barPct = Math.max(1.5, pct);
               let colorClass = "chart-bar--normal";
               if (e.isCurrent) colorClass = "chart-bar--current";
-              else if (e.price === minPrice) colorClass = "chart-bar--cheap";
-              else if (e.price === maxPrice) colorClass = "chart-bar--expensive";
+              else if (e.price < minPrice + deltaMin) colorClass = "chart-bar--cheap";
+              else if (e.price > maxPrice - deltaMax) colorClass = "chart-bar--expensive";
               else if (e.price < 0) colorClass = "chart-bar--cheap";
               const isDaySep = i > 0 && e.day !== allEntries[i - 1].day;
               return html`

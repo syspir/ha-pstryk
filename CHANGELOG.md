@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.6] - 2026-04-12
+
+### Dodane
+- Kolorowanie słupków na wykresie TGE RDN według progów — zielone gdy cena < Min + delta, czerwone gdy cena > Max − delta
+
 ## [0.9.5] - 2026-04-12
 
 ### Dodane
