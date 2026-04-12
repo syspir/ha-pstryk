@@ -41,20 +41,23 @@
           "scan_interval": "Interwał odświeżania (minuty)",
           "is_prosumer": "Jestem prosumentem (fotowoltaika)",
           "enable_panel": "Włącz panel w menu bocznym",
-          "blebox_ip": "Adres IP licznika BleBox",
-          "tge_delta_min": "Delta ceny min TGE (grosze)",
-          "tge_delta_max": "Delta ceny max TGE (grosze)",
-          "tge_avg_percent": "Próg średniej TGE (%)"
-        },
-        "data_description": {
-          "tge_delta_min": "Próg: cena < Min + delta (domyślnie 5 gr = 0,05 PLN/kWh)",
-          "tge_delta_max": "Próg: cena > Max − delta (domyślnie 5 gr = 0,05 PLN/kWh)",
-          "tge_avg_percent": "Próg: cena ≤ X% średniej dnia (domyślnie 67% ≈ 2/3)"
+          "blebox_ip": "Adres IP licznika BleBox"
         }
       }
     }
   },
   "entity": {
+    "number": {
+      "tge_delta_min": {
+        "name": "Delta ceny min TGE"
+      },
+      "tge_delta_max": {
+        "name": "Delta ceny max TGE"
+      },
+      "tge_avg_percent": {
+        "name": "Próg średniej TGE"
+      }
+    },
     "sensor": {
       "tge_rdn_current_price": {
         "name": "Cena RDN (bieżąca godzina)"

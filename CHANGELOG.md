@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.5] - 2026-04-12
+
+### Dodane
+- Encje number do konfiguracji progów TGE (Delta ceny min, Delta ceny max, Próg średniej) — edytowalne bezpośrednio w HA, zmiana działa natychmiast bez reloadu integracji
+- Platforma `number` w integracji
+
+### Usunięte
+- Pola progów TGE z opcji integracji (config flow) — przeniesione na encje number
+
 ## [0.9.4] - 2026-04-12
 
 ### Naprawione

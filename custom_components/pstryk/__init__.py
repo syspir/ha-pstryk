@@ -24,14 +24,8 @@ from .const import (
     CONF_ENABLE_PANEL,
     CONF_IS_PROSUMER,
     CONF_SCAN_INTERVAL_MINUTES,
-    CONF_TGE_AVG_PERCENT,
-    CONF_TGE_DELTA_MAX,
-    CONF_TGE_DELTA_MIN,
     CONF_TIMEZONE,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TGE_AVG_PERCENT,
-    DEFAULT_TGE_DELTA_MAX,
-    DEFAULT_TGE_DELTA_MIN,
     DEFAULT_TIMEZONE,
     DOMAIN,
     PANEL_ICON,
@@ -113,33 +107,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_id=entry.entry_id,
     )
 
-    try:
-        tge_delta_min = int(entry.options.get(CONF_TGE_DELTA_MIN, DEFAULT_TGE_DELTA_MIN)) / 100
-    except (TypeError, ValueError):
-        tge_delta_min = DEFAULT_TGE_DELTA_MIN / 100
-    try:
-        tge_delta_max = int(entry.options.get(CONF_TGE_DELTA_MAX, DEFAULT_TGE_DELTA_MAX)) / 100
-    except (TypeError, ValueError):
-        tge_delta_max = DEFAULT_TGE_DELTA_MAX / 100
-    try:
-        tge_avg_percent = int(entry.options.get(CONF_TGE_AVG_PERCENT, DEFAULT_TGE_AVG_PERCENT))
-    except (TypeError, ValueError):
-        tge_avg_percent = DEFAULT_TGE_AVG_PERCENT
-
-    _LOGGER.debug(
-        "TGE config: delta_min=%s, delta_max=%s, avg_percent=%s (raw options: %s)",
-        tge_delta_min, tge_delta_max, tge_avg_percent,
-        {k: v for k, v in entry.options.items() if k.startswith("tge_")},
-    )
-
     tge_coordinator = PstrykTgeCoordinator(
         hass=hass,
         session=session,
         update_interval=UPDATE_INTERVAL_TGE,
         entry_id=entry.entry_id,
-        delta_min=tge_delta_min,
-        delta_max=tge_delta_max,
-        avg_percent=tge_avg_percent,
     )
 
     # Restore last known data from storage (sensors available immediately)

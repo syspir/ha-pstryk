@@ -22,11 +22,6 @@ CONF_SCAN_INTERVAL_MINUTES = "scan_interval"
 # BleBox local meter
 CONF_BLEBOX_IP = "blebox_ip"
 
-# TGE indicator thresholds
-CONF_TGE_DELTA_MIN = "tge_delta_min"  # grosze
-CONF_TGE_DELTA_MAX = "tge_delta_max"  # grosze
-CONF_TGE_AVG_PERCENT = "tge_avg_percent"  # procent średniej dnia
-
 # Defaults
 DEFAULT_TIMEZONE = "Europe/Warsaw"
 DEFAULT_SCAN_INTERVAL = 30  # minutes
@@ -65,4 +60,4 @@ PANEL_ICON = "mdi:flash"
 PANEL_TITLE = "Pstryk Energy"
 
 # Platforms
-PLATFORMS = ["sensor"]
+PLATFORMS = ["number", "sensor"]
