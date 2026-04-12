@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.2] - 2026-04-12
+
+### Naprawione
+- Etykiety wskaźników TGE w panelu — Min dziś pokazuje „+X gr", Max dziś pokazuje „−X gr" zamiast wspólnego „±" dla obu
+
 ## [0.9.1] - 2026-04-12
 
 ### Naprawione

@@ -952,7 +952,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-down-bold"></ha-icon>
-            Min dziś (±${(dMin * 100).toFixed(0)} gr)
+            Min dziś (+${(dMin * 100).toFixed(0)} gr)
           </span>
           <span class="metric-value">
             ${minR05 !== null ? minR05 : "---"}
@@ -962,7 +962,7 @@ class PstrykPanel extends LitElement {
         <div class="metric">
           <span class="metric-label">
             <ha-icon icon="mdi:arrow-up-bold"></ha-icon>
-            Max dziś (±${(dMax * 100).toFixed(0)} gr)
+            Max dziś (−${(dMax * 100).toFixed(0)} gr)
           </span>
           <span class="metric-value">
             ${maxR05 !== null ? maxR05 : "---"}
