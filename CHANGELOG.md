@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.9] - 2026-04-15
+
+### Usunięte
+- Sekcja „Dane na żywo" (bieżąca godzina — cena zakupu brutto z rozbiciem na komponenty) z panelu
+
 ## [0.9.8] - 2026-04-15
 
 ### Usunięte

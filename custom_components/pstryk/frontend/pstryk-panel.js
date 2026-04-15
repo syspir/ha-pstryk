@@ -428,58 +428,6 @@ class PstrykPanel extends LitElement {
     `;
   }
 
-  _renderLiveSection() {
-    const prefix = "sensor.pstryk_energy_";
-    const priceEntity = `${prefix}cena_energii_zakup_brutto`;
-    const fullPrice = this._getState(priceEntity);
-    const unit = this._getUnit(priceEntity);
-    const isCheap = this._getAttr(priceEntity, "is_cheap");
-    const isExpensive = this._getAttr(priceEntity, "is_expensive");
-
-    let badge = html``;
-    if (isCheap === true || isCheap === "True") {
-      badge = html`<span class="badge badge-cheap">Tania</span>`;
-    } else if (isExpensive === true || isExpensive === "True") {
-      badge = html`<span class="badge badge-expensive">Droga</span>`;
-    } else if (isCheap !== null && isCheap !== undefined) {
-      badge = html`<span class="badge badge-neutral">Normalna</span>`;
-    }
-
-    const prosumerEntity = `${prefix}cena_sprzedazy_energii_brutto`;
-    const hasProsumer = this._entityExists(prosumerEntity);
-
-    return html`
-      <div class="section-title">Bieżąca godzina</div>
-      <div class="grid-full">
-        <ha-card class="live-card">
-          <div class="card-header">
-            <ha-icon icon="mdi:pulse"></ha-icon>
-            Dane na żywo
-            ${badge}
-          </div>
-          <div class="live-price-main">
-            <div>
-              <span class="live-price-value">${fullPrice !== null ? fullPrice : "---"}</span>
-              <span class="live-price-unit">${unit}</span>
-            </div>
-            <div class="live-price-label">Cena zakupu brutto (z dystrybucją)</div>
-          </div>
-          <div class="live-grid">
-            ${this._renderAttrMetric("mdi:lightning-bolt", "Cena TGE", this._getAttr(priceEntity, "base_price"), "PLN/kWh")}
-            ${this._renderAttrMetric("mdi:transmission-tower", "Dystrybucja", this._getAttr(priceEntity, "dist_price"), "PLN/kWh")}
-            ${this._renderAttrMetric("mdi:cog", "Opłata serwisowa", this._getAttr(priceEntity, "service_price"), "PLN/kWh")}
-            ${this._renderAttrMetric("mdi:gavel", "Akcyza", this._getAttr(priceEntity, "excise_component"), "PLN/kWh")}
-            ${this._renderAttrMetric("mdi:percent-outline", "VAT", this._getAttr(priceEntity, "vat_component"), "PLN/kWh")}
-            ${hasProsumer ? this._renderMetricIcon("mdi:solar-power-variant", "Cena sprzedaży", prosumerEntity) : ""}
-            ${this._renderMetricIcon("mdi:flash", "Pobrana", `${prefix}energia_pobrana_biezaca_godzina`)}
-            ${this._renderMetricIcon("mdi:flash-outline", "Oddana", `${prefix}energia_oddana_biezaca_godzina`)}
-            ${this._renderMetricIcon("mdi:cash-clock", "Koszt", `${prefix}koszt_biezaca_godzina`)}
-          </div>
-        </ha-card>
-      </div>
-    `;
-  }
-
   _renderEnergySection() {
     const prefix = "sensor.pstryk_energy_";
     return html`
@@ -962,7 +910,6 @@ class PstrykPanel extends LitElement {
           </a>
         </div>
       </div>
-      ${this._renderLiveSection()}
       ${this._renderTgeRdnSection()}
       ${this._renderEnergySection()}
       ${this._renderCostSection()}
