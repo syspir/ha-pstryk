@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.10] - 2026-04-15
+
+### Zmienione
+- Rozdzielenie wykresu cen RDN na dwa osobne boksy: „Prognoza dziś" i „Prognoza jutro" (wyświetlany tylko gdy dane dostępne)
+
 ## [0.9.9] - 2026-04-15
 
 ### Usunięte

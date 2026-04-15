@@ -524,15 +524,15 @@ class PstrykPanel extends LitElement {
         <ha-card>
           <div class="card-header">
             <ha-icon icon="mdi:chart-bar"></ha-icon>
-            Ceny godzinowe RDN Fixing I
+            Prognoza dziś
           </div>
-          ${this._renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin, deltaMax)}
+          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax)}
         </ha-card>
         ${tomorrowAvailable && forecastTomorrow.length ? html`
           <ha-card>
             <div class="card-header">
               <ha-icon icon="mdi:chart-bar"></ha-icon>
-              Ceny godzinowe RDN Jutro
+              Prognoza jutro
             </div>
             ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax)}
           </ha-card>
