@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.8] - 2026-04-15
+
+### Usunięte
+- Sekcja „Prognoza cen" (wykres słupkowy cen godzinowych zakupu brutto) z panelu
+- Sekcja „Nadchodzące ceny" (najtańsza/najdroższa godzina) z panelu
+
 ## [0.9.7] - 2026-04-12
 
 ### Usunięte

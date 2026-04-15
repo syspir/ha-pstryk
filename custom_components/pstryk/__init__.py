@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-12
+# Ostatnia modyfikacja: 2026-04-15
 
 """The Pstryk Energy integration."""
 
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={
                 "_panel_custom": {
                     "name": "pstryk-panel",
-                    "module_url": "/pstryk_panel/pstryk-panel.js?v=27",
+                    "module_url": "/pstryk_panel/pstryk-panel.js?v=28",
                 }
             },
             require_admin=False,
