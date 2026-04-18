@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.11] - 2026-04-19
+
+### Dodane
+- Konfigurowalny próg „Minimalna cena sprzedaży TGE" (domyślnie 1.00 PLN/kWh) — sensor `tge_rdn_cena_gt_max05` nie wskazuje sprzedaży, gdy cena jest poniżej tego progu
+- Konfigurowalny próg „Cena zawsze kupuj TGE" (domyślnie 0.23 PLN/kWh) — sensor `tge_rdn_cena_lt_min05` zawsze wskazuje zakup, gdy cena jest poniżej tego progu
+
 ## [0.9.10] - 2026-04-15
 
 ### Zmienione

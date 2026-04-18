@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-12
+# Ostatnia modyfikacja: 2026-04-19
 
 """Data update coordinators for Pstryk Energy."""
 
@@ -242,6 +242,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         delta_min: float = 0.05,
         delta_max: float = 0.05,
         avg_percent: int = 67,
+        min_sell_price: float = 1.00,
+        always_buy_price: float = 0.23,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -257,6 +259,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.delta_min = delta_min
         self.delta_max = delta_max
         self.avg_percent = avg_percent
+        self.min_sell_price = min_sell_price
+        self.always_buy_price = always_buy_price
 
     async def async_load_stored_data(self) -> None:
         """Load last known data from persistent storage."""
@@ -284,6 +288,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             stored["delta_min"] = self.delta_min
             stored["delta_max"] = self.delta_max
             stored["avg_percent"] = self.avg_percent
+            stored["min_sell_price"] = self.min_sell_price
+            stored["always_buy_price"] = self.always_buy_price
             self.async_set_updated_data(stored)
             _LOGGER.debug("Restored TGE RDN data from storage")
 
@@ -350,6 +356,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         result["delta_min"] = self.delta_min
         result["delta_max"] = self.delta_max
         result["avg_percent"] = self.avg_percent
+        result["min_sell_price"] = self.min_sell_price
+        result["always_buy_price"] = self.always_buy_price
         return result
 
     def recalculate_current(self) -> None:
@@ -376,6 +384,8 @@ class PstrykTgeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         updated["delta_min"] = self.delta_min
         updated["delta_max"] = self.delta_max
         updated["avg_percent"] = self.avg_percent
+        updated["min_sell_price"] = self.min_sell_price
+        updated["always_buy_price"] = self.always_buy_price
         self.async_set_updated_data(updated)
 
         # Refresh needed: today data stale/missing, or tomorrow missing after 13:00

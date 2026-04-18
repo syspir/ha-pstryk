@@ -56,6 +56,12 @@
       },
       "tge_avg_percent": {
         "name": "Próg średniej TGE"
+      },
+      "tge_min_sell_price": {
+        "name": "Minimalna cena sprzedaży TGE"
+      },
+      "tge_always_buy_price": {
+        "name": "Cena zawsze kupuj TGE"
       }
     },
     "sensor": {

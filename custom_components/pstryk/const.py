@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-12
+# Ostatnia modyfikacja: 2026-04-19
 
 """Constants for the Pstryk Energy integration."""
 
@@ -29,6 +29,8 @@ DEFAULT_NAME = "Pstryk"
 DEFAULT_TGE_DELTA_MIN = 5  # groszy = 0.05 PLN/kWh
 DEFAULT_TGE_DELTA_MAX = 5  # groszy = 0.05 PLN/kWh
 DEFAULT_TGE_AVG_PERCENT = 67  # procent (2/3 ≈ 67%)
+DEFAULT_TGE_MIN_SELL_PRICE = 100  # groszy = 1.00 PLN/kWh — nie sprzedawaj poniżej tej ceny
+DEFAULT_TGE_ALWAYS_BUY_PRICE = 23  # groszy = 0.23 PLN/kWh — zawsze kupuj poniżej tej ceny
 
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)

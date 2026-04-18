@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-12
+# Ostatnia modyfikacja: 2026-04-19
 
 """Number entities for Pstryk Energy TGE thresholds."""
 
@@ -15,9 +15,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    DEFAULT_TGE_ALWAYS_BUY_PRICE,
     DEFAULT_TGE_AVG_PERCENT,
     DEFAULT_TGE_DELTA_MAX,
     DEFAULT_TGE_DELTA_MIN,
+    DEFAULT_TGE_MIN_SELL_PRICE,
     DOMAIN,
 )
 
@@ -84,6 +86,36 @@ async def async_setup_entry(
             default=DEFAULT_TGE_AVG_PERCENT,
             attr="avg_percent",
             divisor=1,
+        ),
+        PstrykTgeNumber(
+            coordinator=tge_coordinator,
+            entry=entry,
+            device_info=tge_device_info,
+            key="tge_min_sell_price",
+            translation_key="tge_min_sell_price",
+            name="Minimalna cena sprzedaży TGE",
+            icon="mdi:cash-lock",
+            native_min=0,
+            native_max=500,
+            native_unit="gr",
+            default=DEFAULT_TGE_MIN_SELL_PRICE,
+            attr="min_sell_price",
+            divisor=100,
+        ),
+        PstrykTgeNumber(
+            coordinator=tge_coordinator,
+            entry=entry,
+            device_info=tge_device_info,
+            key="tge_always_buy_price",
+            translation_key="tge_always_buy_price",
+            name="Cena zawsze kupuj TGE",
+            icon="mdi:cash-check",
+            native_min=0,
+            native_max=500,
+            native_unit="gr",
+            default=DEFAULT_TGE_ALWAYS_BUY_PRICE,
+            attr="always_buy_price",
+            divisor=100,
         ),
     ])
 

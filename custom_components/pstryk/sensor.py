@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-12
+# Ostatnia modyfikacja: 2026-04-19
 
 """Sensor platform for Pstryk Energy integration."""
 
@@ -94,44 +94,54 @@ def _tge_cena_lt_avg_attrs(data: dict) -> dict:
 
 
 def _tge_cena_lt_min_delta(data: dict) -> int | None:
-    """Return 1 if current price < min_today + delta_min, else 0."""
+    """Return 1 if price <= min_today + delta_min OR price <= always_buy_price."""
     price = data.get("current_price")
     min_price = _safe_get(data, "today", "min_price")
     if price is None or min_price is None:
         return None
     delta = data.get("delta_min", 0.05)
-    return 1 if price < min_price + delta else 0
+    always_buy = data.get("always_buy_price", 0)
+    if always_buy and price <= always_buy:
+        return 1
+    return 1 if price <= min_price + delta else 0
 
 
 def _tge_cena_lt_min_delta_attrs(data: dict) -> dict:
     min_price = _safe_get(data, "today", "min_price")
     delta = data.get("delta_min", 0.05)
+    always_buy = data.get("always_buy_price", 0)
     return {
         "current_price": data.get("current_price"),
         "min_today": min_price,
         "delta": delta,
         "threshold": round(min_price + delta, 4) if min_price is not None else None,
+        "always_buy_price": always_buy,
     }
 
 
 def _tge_cena_gt_max_delta(data: dict) -> int | None:
-    """Return 1 if current price > max_today - delta_max, else 0."""
+    """Return 1 if price >= max_today - delta_max AND price >= min_sell_price, else 0."""
     price = data.get("current_price")
     max_price = _safe_get(data, "today", "max_price")
     if price is None or max_price is None:
         return None
     delta = data.get("delta_max", 0.05)
-    return 1 if price > max_price - delta else 0
+    min_sell = data.get("min_sell_price", 0)
+    if min_sell and price < min_sell:
+        return 0
+    return 1 if price >= max_price - delta else 0
 
 
 def _tge_cena_gt_max_delta_attrs(data: dict) -> dict:
     max_price = _safe_get(data, "today", "max_price")
     delta = data.get("delta_max", 0.05)
+    min_sell = data.get("min_sell_price", 0)
     return {
         "current_price": data.get("current_price"),
         "max_today": max_price,
         "delta": delta,
         "threshold": round(max_price - delta, 4) if max_price is not None else None,
+        "min_sell_price": min_sell,
     }
 
 
