@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.13] - 2026-04-19
+
+### Dodane
+- Nowy osobny sensor `tge_rdn_cena_lt_always_buy` („Cena RDN — zawsze kupuj") — `1` gdy aktualna cena jest poniżej progu „Cena zawsze kupuj TGE"
+
+### Zmienione
+- Sensor `tge_rdn_cena_lt_min05` wrócił do oryginalnej logiki (tylko `cena ≤ Min+delta`) — próg „zawsze kupuj" wydzielony do osobnego sensora
+- Kolorowanie wykresu TGE RDN: zielony zależy tylko od `Min+delta`, czerwony nadal respektuje próg „Minimalna cena sprzedaży"
+
 ## [0.9.12] - 2026-04-19
 
 ### Zmienione

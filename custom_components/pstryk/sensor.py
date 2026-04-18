@@ -94,28 +94,41 @@ def _tge_cena_lt_avg_attrs(data: dict) -> dict:
 
 
 def _tge_cena_lt_min_delta(data: dict) -> int | None:
-    """Return 1 if price <= min_today + delta_min OR price <= always_buy_price."""
+    """Return 1 if current price <= min_today + delta_min, else 0."""
     price = data.get("current_price")
     min_price = _safe_get(data, "today", "min_price")
     if price is None or min_price is None:
         return None
     delta = data.get("delta_min", 0.05)
-    always_buy = data.get("always_buy_price", 0)
-    if always_buy and price <= always_buy:
-        return 1
     return 1 if price <= min_price + delta else 0
 
 
 def _tge_cena_lt_min_delta_attrs(data: dict) -> dict:
     min_price = _safe_get(data, "today", "min_price")
     delta = data.get("delta_min", 0.05)
-    always_buy = data.get("always_buy_price", 0)
     return {
         "current_price": data.get("current_price"),
         "min_today": min_price,
         "delta": delta,
         "threshold": round(min_price + delta, 4) if min_price is not None else None,
-        "always_buy_price": always_buy,
+    }
+
+
+def _tge_cena_lt_always_buy(data: dict) -> int | None:
+    """Return 1 if always_buy_price > 0 and current price <= always_buy_price."""
+    price = data.get("current_price")
+    always_buy = data.get("always_buy_price", 0)
+    if price is None:
+        return None
+    if not always_buy:
+        return 0
+    return 1 if price <= always_buy else 0
+
+
+def _tge_cena_lt_always_buy_attrs(data: dict) -> dict:
+    return {
+        "current_price": data.get("current_price"),
+        "always_buy_price": data.get("always_buy_price", 0),
     }
 
 
@@ -731,6 +744,17 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
         coordinator_type="tge",
         value_fn=_tge_cena_lt_min_delta,
         extra_attrs_fn=_tge_cena_lt_min_delta_attrs,
+    ),
+    PstrykSensorEntityDescription(
+        key="tge_rdn_cena_lt_always_buy",
+        translation_key="tge_rdn_cena_lt_always_buy",
+        name="Cena RDN — zawsze kupuj",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        icon="mdi:cash-check",
+        coordinator_type="tge",
+        value_fn=_tge_cena_lt_always_buy,
+        extra_attrs_fn=_tge_cena_lt_always_buy_attrs,
     ),
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_gt_max05",

@@ -528,7 +528,7 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:chart-bar"></ha-icon>
             Prognoza dziś
           </div>
-          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
+          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax, minSellPrice)}
         </ha-card>
         ${tomorrowAvailable && forecastTomorrow.length ? html`
           <ha-card>
@@ -536,7 +536,7 @@ class PstrykPanel extends LitElement {
               <ha-icon icon="mdi:chart-bar"></ha-icon>
               Prognoza jutro
             </div>
-            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
+            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice)}
           </ha-card>
         ` : ""}
       </div>
@@ -698,7 +698,7 @@ class PstrykPanel extends LitElement {
     `;
   }
 
-  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05, minSellPrice = 0, alwaysBuyPrice = 0) {
+  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05, minSellPrice = 0) {
     const allEntries = [];
     const now = new Date();
 
@@ -758,10 +758,9 @@ class PstrykPanel extends LitElement {
               const pct = ((e.price - minPrice) / (totalRange || 0.01)) * 100;
               const barPct = Math.max(1.5, pct);
               let colorClass = "chart-bar--normal";
-              const isCheap = e.price < minPrice + deltaMin || (alwaysBuyPrice > 0 && e.price <= alwaysBuyPrice);
               const isExpensive = e.price > maxPrice - deltaMax && (minSellPrice <= 0 || e.price >= minSellPrice);
               if (e.isCurrent) colorClass = "chart-bar--current";
-              else if (isCheap) colorClass = "chart-bar--cheap";
+              else if (e.price < minPrice + deltaMin) colorClass = "chart-bar--cheap";
               else if (isExpensive) colorClass = "chart-bar--expensive";
               else if (e.price < 0) colorClass = "chart-bar--cheap";
               const isDaySep = i > 0 && e.day !== allEntries[i - 1].day;
