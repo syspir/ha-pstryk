@@ -625,7 +625,7 @@ class PstrykPanel extends LitElement {
               </div>
               <div class="thresholds-grid">
                 <div class="threshold-box threshold-box--buy">
-                  <span class="threshold-box-title">Kupuj (zawsze)</span>
+                  <span class="threshold-box-title">Zużywaj prąd</span>
                   <span class="threshold-box-status ${buyYes ? 'threshold-box-status--yes-buy' : 'threshold-box-status--no'}">
                     ${buyYes ? "TAK" : "NIE"}
                   </span>

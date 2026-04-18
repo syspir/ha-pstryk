@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.17] - 2026-04-19
+
+### Zmienione
+- Etykieta karty „Kupuj (zawsze)" na „Zużywaj prąd" w panelu „Progi decyzyjne"
+
 ## [0.9.16] - 2026-04-19
 
 ### Dodane
