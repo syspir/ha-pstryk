@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.14] - 2026-04-19
+
+### Naprawione
+- Kolorowanie wykresu TGE RDN uwzględnia próg „Minimalna cena sprzedaży" — sensor `tge_rdn_current_price` nie wystawiał atrybutów `min_sell_price` i `always_buy_price`, przez co panel ich nie widział
+
+### Dodane
+- Karta „Progi decyzyjne" w panelu TGE — podgląd aktualnych wartości progów „Kupuj" (always_buy) i „Sprzedawaj" (min_sell) z bieżącą ceną
+- Poziome linie progów (zielona „kupuj", czerwona „sprzedawaj") na wykresach „Prognoza dziś" i „Prognoza jutro"
+- Zielone słupki wykresu respektują również próg „zawsze kupuj" (nie tylko `Min+delta`)
+
+### Zmienione
+- Sensor `tge_rdn_cena_gt_max05` przemianowany na „Cena RDN — sprzedawaj" (ikona `mdi:cash-plus`)
+- Sensor `tge_rdn_cena_lt_always_buy` przemianowany na „Cena RDN — kupuj"
+
 ## [0.9.13] - 2026-04-19
 
 ### Dodane

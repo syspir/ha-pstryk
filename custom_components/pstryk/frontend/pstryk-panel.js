@@ -306,6 +306,64 @@ class PstrykPanel extends LitElement {
       .chart-bar--highlight {
         box-shadow: 0 0 0 2px var(--primary-text-color);
       }
+      .chart-threshold-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 2px dashed;
+        pointer-events: none;
+        z-index: 2;
+        font-size: 10px;
+        line-height: 1;
+      }
+      .chart-threshold-line--buy {
+        border-color: var(--pstryk-green, #4caf50);
+      }
+      .chart-threshold-line--sell {
+        border-color: var(--pstryk-red, #e53935);
+      }
+      .chart-threshold-label {
+        position: absolute;
+        right: 2px;
+        top: -12px;
+        padding: 1px 4px;
+        border-radius: 3px;
+        color: #fff;
+        font-weight: 600;
+      }
+      .chart-threshold-label--buy { background: var(--pstryk-green, #4caf50); }
+      .chart-threshold-label--sell { background: var(--pstryk-red, #e53935); }
+      .thresholds-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px 16px 16px 16px;
+      }
+      .threshold-box {
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .threshold-box--buy { border-left: 4px solid var(--pstryk-green, #4caf50); }
+      .threshold-box--sell { border-left: 4px solid var(--pstryk-red, #e53935); }
+      .threshold-box-title {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .threshold-box-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+      .threshold-box-hint {
+        font-size: 11px;
+        color: var(--secondary-text-color);
+      }
       .chart-hour-labels {
         display: flex;
         gap: 1px;
@@ -528,7 +586,7 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:chart-bar"></ha-icon>
             Prognoza dziś
           </div>
-          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax, minSellPrice)}
+          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
         </ha-card>
         ${tomorrowAvailable && forecastTomorrow.length ? html`
           <ha-card>
@@ -536,9 +594,39 @@ class PstrykPanel extends LitElement {
               <ha-icon icon="mdi:chart-bar"></ha-icon>
               Prognoza jutro
             </div>
-            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice)}
+            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
           </ha-card>
         ` : ""}
+        <ha-card>
+          <div class="card-header">
+            <ha-icon icon="mdi:tune-vertical"></ha-icon>
+            Progi decyzyjne
+          </div>
+          <div class="thresholds-grid">
+            <div class="threshold-box threshold-box--buy">
+              <span class="threshold-box-title">Kupuj (zawsze)</span>
+              <span class="threshold-box-value">
+                ${alwaysBuyPrice > 0 ? `≤ ${alwaysBuyPrice.toFixed(2)} ${unit}` : "wyłączony"}
+              </span>
+              <span class="threshold-box-hint">
+                Cena aktualna: ${currentPrice !== null ? `${currentPrice} ${unit}` : "---"}
+                ${currentPrice !== null && alwaysBuyPrice > 0
+                  ? (currentPrice <= alwaysBuyPrice ? " — KUPUJ" : "")
+                  : ""}
+              </span>
+            </div>
+            <div class="threshold-box threshold-box--sell">
+              <span class="threshold-box-title">Sprzedawaj (min. cena)</span>
+              <span class="threshold-box-value">
+                ${minSellPrice > 0 ? `≥ ${minSellPrice.toFixed(2)} ${unit}` : "wyłączony"}
+              </span>
+              <span class="threshold-box-hint">
+                Max dziś: ${this._getState(maxTodayEntity) !== null ? `${this._getState(maxTodayEntity)} ${unit}` : "---"}
+                — próg Max−${deltaMax.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </ha-card>
       </div>
       <div class="grid">
         <ha-card>
@@ -698,7 +786,7 @@ class PstrykPanel extends LitElement {
     `;
   }
 
-  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05, minSellPrice = 0) {
+  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05, minSellPrice = 0, alwaysBuyPrice = 0) {
     const allEntries = [];
     const now = new Date();
 
@@ -758,9 +846,10 @@ class PstrykPanel extends LitElement {
               const pct = ((e.price - minPrice) / (totalRange || 0.01)) * 100;
               const barPct = Math.max(1.5, pct);
               let colorClass = "chart-bar--normal";
+              const isCheap = e.price < minPrice + deltaMin || (alwaysBuyPrice > 0 && e.price <= alwaysBuyPrice);
               const isExpensive = e.price > maxPrice - deltaMax && (minSellPrice <= 0 || e.price >= minSellPrice);
               if (e.isCurrent) colorClass = "chart-bar--current";
-              else if (e.price < minPrice + deltaMin) colorClass = "chart-bar--cheap";
+              else if (isCheap) colorClass = "chart-bar--cheap";
               else if (isExpensive) colorClass = "chart-bar--expensive";
               else if (e.price < 0) colorClass = "chart-bar--cheap";
               const isDaySep = i > 0 && e.day !== allEntries[i - 1].day;
@@ -772,6 +861,18 @@ class PstrykPanel extends LitElement {
                 </div>
               `;
             })}
+            ${alwaysBuyPrice > 0 && alwaysBuyPrice >= minPrice && alwaysBuyPrice <= maxPrice ? html`
+              <div class="chart-threshold-line chart-threshold-line--buy"
+                   style="bottom: ${((alwaysBuyPrice - minPrice) / (totalRange || 0.01)) * 100}%">
+                <span class="chart-threshold-label chart-threshold-label--buy">kupuj ≤ ${alwaysBuyPrice.toFixed(2)}</span>
+              </div>
+            ` : ""}
+            ${minSellPrice > 0 && minSellPrice >= minPrice && minSellPrice <= maxPrice ? html`
+              <div class="chart-threshold-line chart-threshold-line--sell"
+                   style="bottom: ${((minSellPrice - minPrice) / (totalRange || 0.01)) * 100}%">
+                <span class="chart-threshold-label chart-threshold-label--sell">sprzedawaj ≥ ${minSellPrice.toFixed(2)}</span>
+              </div>
+            ` : ""}
           </div>
           <div class="chart-hour-labels">
             ${allEntries.map(e => html`

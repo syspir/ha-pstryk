@@ -606,6 +606,8 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
             "delta_min": data.get("delta_min", 0.05),
             "delta_max": data.get("delta_max", 0.05),
             "avg_percent": data.get("avg_percent", 67),
+            "min_sell_price": data.get("min_sell_price", 0),
+            "always_buy_price": data.get("always_buy_price", 0),
         },
     ),
     PstrykSensorEntityDescription(
@@ -748,7 +750,7 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_lt_always_buy",
         translation_key="tge_rdn_cena_lt_always_buy",
-        name="Cena RDN — zawsze kupuj",
+        name="Cena RDN — kupuj",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         icon="mdi:cash-check",
@@ -759,10 +761,10 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_gt_max05",
         translation_key="tge_rdn_cena_gt_max05",
-        name="Cena RDN > Max-0,05",
+        name="Cena RDN — sprzedawaj",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        icon="mdi:arrow-up-circle-outline",
+        icon="mdi:cash-plus",
         coordinator_type="tge",
         value_fn=_tge_cena_gt_max_delta,
         extra_attrs_fn=_tge_cena_gt_max_delta_attrs,
