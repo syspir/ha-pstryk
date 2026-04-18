@@ -61,7 +61,7 @@
         "name": "Minimalna cena sprzedaży TGE"
       },
       "tge_always_buy_price": {
-        "name": "Cena zawsze kupuj TGE"
+        "name": "Cena zużywaj prąd TGE"
       }
     },
     "sensor": {

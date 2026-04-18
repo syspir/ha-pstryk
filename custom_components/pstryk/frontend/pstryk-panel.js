@@ -890,7 +890,7 @@ class PstrykPanel extends LitElement {
             ${alwaysBuyPrice !== 0 && alwaysBuyPrice >= minPrice && alwaysBuyPrice <= maxPrice ? html`
               <div class="chart-threshold-line chart-threshold-line--buy"
                    style="bottom: ${((alwaysBuyPrice - minPrice) / (totalRange || 0.01)) * 100}%">
-                <span class="chart-threshold-label chart-threshold-label--buy">kupuj ≤ ${alwaysBuyPrice.toFixed(2)}</span>
+                <span class="chart-threshold-label chart-threshold-label--buy">zużywaj ≤ ${alwaysBuyPrice.toFixed(2)}</span>
               </div>
             ` : ""}
             ${minSellPrice > 0 && minSellPrice >= minPrice && minSellPrice <= maxPrice ? html`

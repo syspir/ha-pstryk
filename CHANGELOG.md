@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.19] - 2026-04-19
+
+### Zmienione
+- Nazwa encji `number.tge_cena_zawsze_kupuj` z „Cena zawsze kupuj TGE" na „Cena zużywaj prąd TGE"
+- Etykieta poziomej linii progu na wykresach TGE w panelu z „kupuj ≤" na „zużywaj ≤"
+
 ## [0.9.18] - 2026-04-19
 
 ### Zmienione

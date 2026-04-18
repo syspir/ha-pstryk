@@ -115,7 +115,7 @@ async def async_setup_entry(
             device_info=tge_device_info,
             key="tge_always_buy_price",
             translation_key="tge_always_buy_price",
-            name="Cena zawsze kupuj TGE",
+            name="Cena zużywaj prąd TGE",
             icon="mdi:cash-check",
             native_min=-1.00,
             native_max=5.00,

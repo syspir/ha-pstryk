@@ -30,7 +30,7 @@ DEFAULT_TGE_DELTA_MIN = 0.05  # PLN/kWh
 DEFAULT_TGE_DELTA_MAX = 0.05  # PLN/kWh
 DEFAULT_TGE_AVG_PERCENT = 67  # procent (2/3 ≈ 67%)
 DEFAULT_TGE_MIN_SELL_PRICE = 1.00  # PLN/kWh — nie sprzedawaj poniżej tej ceny (0 = próg wyłączony)
-DEFAULT_TGE_ALWAYS_BUY_PRICE = 0.23  # PLN/kWh — zawsze kupuj poniżej tej ceny (0 = próg wyłączony)
+DEFAULT_TGE_ALWAYS_BUY_PRICE = 0.23  # PLN/kWh — zużywaj prąd poniżej tej ceny (0 = próg wyłączony)
 
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)
