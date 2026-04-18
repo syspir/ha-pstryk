@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.12] - 2026-04-19
+
+### Zmienione
+- Kolorowanie wykresu TGE RDN w panelu uwzględnia progi „Minimalna cena sprzedaży" i „Cena zawsze kupuj" — słupki nie są czerwone, gdy cena jest poniżej progu sprzedaży, i zawsze zielone, gdy cena jest poniżej progu zakupu
+
 ## [0.9.11] - 2026-04-19
 
 ### Dodane

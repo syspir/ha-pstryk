@@ -512,6 +512,8 @@ class PstrykPanel extends LitElement {
     const deltaMin = this._getAttr(currentEntity, "delta_min") ?? 0.05;
     const deltaMax = this._getAttr(currentEntity, "delta_max") ?? 0.05;
     const avgPercent = this._getAttr(currentEntity, "avg_percent") ?? 67;
+    const minSellPrice = this._getAttr(currentEntity, "min_sell_price") ?? 0;
+    const alwaysBuyPrice = this._getAttr(currentEntity, "always_buy_price") ?? 0;
 
     const minTodayHour = this._getAttr(minTodayEntity, "hour");
     const maxTodayHour = this._getAttr(maxTodayEntity, "hour");
@@ -526,7 +528,7 @@ class PstrykPanel extends LitElement {
             <ha-icon icon="mdi:chart-bar"></ha-icon>
             Prognoza dziś
           </div>
-          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax)}
+          ${this._renderTgeRdnChart(forecastToday, [], currentHour, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
         </ha-card>
         ${tomorrowAvailable && forecastTomorrow.length ? html`
           <ha-card>
@@ -534,7 +536,7 @@ class PstrykPanel extends LitElement {
               <ha-icon icon="mdi:chart-bar"></ha-icon>
               Prognoza jutro
             </div>
-            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax)}
+            ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
           </ha-card>
         ` : ""}
       </div>
@@ -696,7 +698,7 @@ class PstrykPanel extends LitElement {
     `;
   }
 
-  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05) {
+  _renderTgeRdnChart(forecastToday, forecastTomorrow, currentHour, deltaMin = 0.05, deltaMax = 0.05, minSellPrice = 0, alwaysBuyPrice = 0) {
     const allEntries = [];
     const now = new Date();
 
@@ -756,9 +758,11 @@ class PstrykPanel extends LitElement {
               const pct = ((e.price - minPrice) / (totalRange || 0.01)) * 100;
               const barPct = Math.max(1.5, pct);
               let colorClass = "chart-bar--normal";
+              const isCheap = e.price < minPrice + deltaMin || (alwaysBuyPrice > 0 && e.price <= alwaysBuyPrice);
+              const isExpensive = e.price > maxPrice - deltaMax && (minSellPrice <= 0 || e.price >= minSellPrice);
               if (e.isCurrent) colorClass = "chart-bar--current";
-              else if (e.price < minPrice + deltaMin) colorClass = "chart-bar--cheap";
-              else if (e.price > maxPrice - deltaMax) colorClass = "chart-bar--expensive";
+              else if (isCheap) colorClass = "chart-bar--cheap";
+              else if (isExpensive) colorClass = "chart-bar--expensive";
               else if (e.price < 0) colorClass = "chart-bar--cheap";
               const isDaySep = i > 0 && e.day !== allEntries[i - 1].day;
               return html`
