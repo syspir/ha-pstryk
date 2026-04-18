@@ -364,6 +364,19 @@ class PstrykPanel extends LitElement {
         font-size: 11px;
         color: var(--secondary-text-color);
       }
+      .threshold-box-status {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.5px;
+        align-self: flex-start;
+      }
+      .threshold-box-status--yes-buy { background: var(--pstryk-green, #4caf50); }
+      .threshold-box-status--yes-sell { background: var(--pstryk-red, #e53935); }
+      .threshold-box-status--no { background: var(--secondary-text-color, #9e9e9e); opacity: 0.7; }
       .chart-hour-labels {
         display: flex;
         gap: 1px;
@@ -597,36 +610,49 @@ class PstrykPanel extends LitElement {
             ${this._renderTgeRdnChart(forecastTomorrow, [], -1, deltaMin, deltaMax, minSellPrice, alwaysBuyPrice)}
           </ha-card>
         ` : ""}
-        <ha-card>
-          <div class="card-header">
-            <ha-icon icon="mdi:tune-vertical"></ha-icon>
-            Progi decyzyjne
-          </div>
-          <div class="thresholds-grid">
-            <div class="threshold-box threshold-box--buy">
-              <span class="threshold-box-title">Kupuj (zawsze)</span>
-              <span class="threshold-box-value">
-                ${alwaysBuyPrice !== 0 ? `≤ ${alwaysBuyPrice.toFixed(2)} ${unit}` : "wyłączony"}
-              </span>
-              <span class="threshold-box-hint">
-                Cena aktualna: ${currentPrice !== null ? `${currentPrice} ${unit}` : "---"}
-                ${currentPrice !== null && alwaysBuyPrice !== 0
-                  ? (currentPrice <= alwaysBuyPrice ? " — KUPUJ" : "")
-                  : ""}
-              </span>
-            </div>
-            <div class="threshold-box threshold-box--sell">
-              <span class="threshold-box-title">Sprzedawaj (min. cena)</span>
-              <span class="threshold-box-value">
-                ${minSellPrice > 0 ? `≥ ${minSellPrice.toFixed(2)} ${unit}` : "wyłączony"}
-              </span>
-              <span class="threshold-box-hint">
-                Max dziś: ${this._getState(maxTodayEntity) !== null ? `${this._getState(maxTodayEntity)} ${unit}` : "---"}
-                — próg Max−${deltaMax.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </ha-card>
+        ${(() => {
+          const cp = typeof currentPrice === "number" ? currentPrice : parseFloat(currentPrice);
+          const maxTodayVal = parseFloat(this._getState(maxTodayEntity));
+          const buyYes = alwaysBuyPrice !== 0 && !isNaN(cp) && cp <= alwaysBuyPrice;
+          const sellYes = !isNaN(cp) && !isNaN(maxTodayVal)
+            && cp >= maxTodayVal - deltaMax
+            && (minSellPrice <= 0 || cp >= minSellPrice);
+          return html`
+            <ha-card>
+              <div class="card-header">
+                <ha-icon icon="mdi:tune-vertical"></ha-icon>
+                Progi decyzyjne
+              </div>
+              <div class="thresholds-grid">
+                <div class="threshold-box threshold-box--buy">
+                  <span class="threshold-box-title">Kupuj (zawsze)</span>
+                  <span class="threshold-box-status ${buyYes ? 'threshold-box-status--yes-buy' : 'threshold-box-status--no'}">
+                    ${buyYes ? "TAK" : "NIE"}
+                  </span>
+                  <span class="threshold-box-value">
+                    ${alwaysBuyPrice !== 0 ? `≤ ${alwaysBuyPrice.toFixed(2)} ${unit}` : "wyłączony"}
+                  </span>
+                  <span class="threshold-box-hint">
+                    Cena aktualna: ${currentPrice !== null ? `${currentPrice} ${unit}` : "---"}
+                  </span>
+                </div>
+                <div class="threshold-box threshold-box--sell">
+                  <span class="threshold-box-title">Sprzedawaj</span>
+                  <span class="threshold-box-status ${sellYes ? 'threshold-box-status--yes-sell' : 'threshold-box-status--no'}">
+                    ${sellYes ? "TAK" : "NIE"}
+                  </span>
+                  <span class="threshold-box-value">
+                    ${minSellPrice > 0 ? `≥ ${minSellPrice.toFixed(2)} ${unit}` : "Max−delta"}
+                  </span>
+                  <span class="threshold-box-hint">
+                    Max dziś: ${!isNaN(maxTodayVal) ? `${maxTodayVal.toFixed(2)} ${unit}` : "---"}
+                    — próg ≥ ${!isNaN(maxTodayVal) ? (maxTodayVal - deltaMax).toFixed(2) : "---"}
+                  </span>
+                </div>
+              </div>
+            </ha-card>
+          `;
+        })()}
       </div>
       <div class="grid">
         <ha-card>

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.16] - 2026-04-19
+
+### Dodane
+- Status „TAK/NIE" dla progów „Kupuj" i „Sprzedawaj" na karcie „Progi decyzyjne" w panelu — zielony badge dla kupna, czerwony dla sprzedaży, szary dla stanu nieaktywnego
+
 ## [0.9.15] - 2026-04-19
 
 ### Zmienione
