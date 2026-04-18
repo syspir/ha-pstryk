@@ -115,12 +115,12 @@ def _tge_cena_lt_min_delta_attrs(data: dict) -> dict:
 
 
 def _tge_cena_lt_always_buy(data: dict) -> int | None:
-    """Return 1 if always_buy_price > 0 and current price <= always_buy_price."""
+    """Return 1 if threshold != 0 and current price <= always_buy_price (threshold may be negative)."""
     price = data.get("current_price")
     always_buy = data.get("always_buy_price", 0)
     if price is None:
         return None
-    if not always_buy:
+    if always_buy == 0:
         return 0
     return 1 if price <= always_buy else 0
 

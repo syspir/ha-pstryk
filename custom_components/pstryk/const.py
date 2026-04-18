@@ -26,11 +26,11 @@ CONF_BLEBOX_IP = "blebox_ip"
 DEFAULT_TIMEZONE = "Europe/Warsaw"
 DEFAULT_SCAN_INTERVAL = 30  # minutes
 DEFAULT_NAME = "Pstryk"
-DEFAULT_TGE_DELTA_MIN = 5  # groszy = 0.05 PLN/kWh
-DEFAULT_TGE_DELTA_MAX = 5  # groszy = 0.05 PLN/kWh
+DEFAULT_TGE_DELTA_MIN = 0.05  # PLN/kWh
+DEFAULT_TGE_DELTA_MAX = 0.05  # PLN/kWh
 DEFAULT_TGE_AVG_PERCENT = 67  # procent (2/3 ≈ 67%)
-DEFAULT_TGE_MIN_SELL_PRICE = 100  # groszy = 1.00 PLN/kWh — nie sprzedawaj poniżej tej ceny
-DEFAULT_TGE_ALWAYS_BUY_PRICE = 23  # groszy = 0.23 PLN/kWh — zawsze kupuj poniżej tej ceny
+DEFAULT_TGE_MIN_SELL_PRICE = 1.00  # PLN/kWh — nie sprzedawaj poniżej tej ceny (0 = próg wyłączony)
+DEFAULT_TGE_ALWAYS_BUY_PRICE = 0.23  # PLN/kWh — zawsze kupuj poniżej tej ceny (0 = próg wyłączony)
 
 # Update intervals
 UPDATE_INTERVAL_METRICS = timedelta(minutes=15)

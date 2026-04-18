@@ -50,12 +50,14 @@ async def async_setup_entry(
             translation_key="tge_delta_min",
             name="Delta ceny min TGE",
             icon="mdi:arrow-down-circle-outline",
-            native_min=0,
-            native_max=50,
-            native_unit="gr",
+            native_min=0.00,
+            native_max=0.50,
+            native_step=0.01,
+            native_unit="PLN/kWh",
             default=DEFAULT_TGE_DELTA_MIN,
             attr="delta_min",
-            divisor=100,
+            divisor=1,
+            migrate_from_groszy=True,
         ),
         PstrykTgeNumber(
             coordinator=tge_coordinator,
@@ -65,12 +67,14 @@ async def async_setup_entry(
             translation_key="tge_delta_max",
             name="Delta ceny max TGE",
             icon="mdi:arrow-up-circle-outline",
-            native_min=0,
-            native_max=50,
-            native_unit="gr",
+            native_min=0.00,
+            native_max=0.50,
+            native_step=0.01,
+            native_unit="PLN/kWh",
             default=DEFAULT_TGE_DELTA_MAX,
             attr="delta_max",
-            divisor=100,
+            divisor=1,
+            migrate_from_groszy=True,
         ),
         PstrykTgeNumber(
             coordinator=tge_coordinator,
@@ -82,6 +86,7 @@ async def async_setup_entry(
             icon="mdi:approximately-equal-box",
             native_min=1,
             native_max=100,
+            native_step=1,
             native_unit="%",
             default=DEFAULT_TGE_AVG_PERCENT,
             attr="avg_percent",
@@ -95,12 +100,14 @@ async def async_setup_entry(
             translation_key="tge_min_sell_price",
             name="Minimalna cena sprzedaży TGE",
             icon="mdi:cash-lock",
-            native_min=0,
-            native_max=500,
-            native_unit="gr",
+            native_min=0.00,
+            native_max=5.00,
+            native_step=0.01,
+            native_unit="PLN/kWh",
             default=DEFAULT_TGE_MIN_SELL_PRICE,
             attr="min_sell_price",
-            divisor=100,
+            divisor=1,
+            migrate_from_groszy=True,
         ),
         PstrykTgeNumber(
             coordinator=tge_coordinator,
@@ -110,12 +117,14 @@ async def async_setup_entry(
             translation_key="tge_always_buy_price",
             name="Cena zawsze kupuj TGE",
             icon="mdi:cash-check",
-            native_min=0,
-            native_max=500,
-            native_unit="gr",
+            native_min=-1.00,
+            native_max=5.00,
+            native_step=0.01,
+            native_unit="PLN/kWh",
             default=DEFAULT_TGE_ALWAYS_BUY_PRICE,
             attr="always_buy_price",
-            divisor=100,
+            divisor=1,
+            migrate_from_groszy=True,
         ),
     ])
 
@@ -125,7 +134,6 @@ class PstrykTgeNumber(RestoreEntity, NumberEntity):
 
     _attr_has_entity_name = True
     _attr_mode = NumberMode.BOX
-    _attr_native_step = 1.0
 
     def __init__(
         self,
@@ -142,6 +150,8 @@ class PstrykTgeNumber(RestoreEntity, NumberEntity):
         default: float,
         attr: str,
         divisor: float,
+        native_step: float = 1.0,
+        migrate_from_groszy: bool = False,
     ) -> None:
         """Initialize the number entity."""
         self._coordinator = coordinator
@@ -151,11 +161,13 @@ class PstrykTgeNumber(RestoreEntity, NumberEntity):
         self._attr_icon = icon
         self._attr_native_min_value = native_min
         self._attr_native_max_value = native_max
+        self._attr_native_step = native_step
         self._attr_native_unit_of_measurement = native_unit
         self._attr_device_info = device_info
         self._default = default
         self._attr = attr
         self._divisor = divisor
+        self._migrate_from_groszy = migrate_from_groszy
         self._attr_native_value = default
 
     async def async_added_to_hass(self) -> None:
@@ -163,7 +175,11 @@ class PstrykTgeNumber(RestoreEntity, NumberEntity):
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
             try:
-                self._attr_native_value = float(last_state.state)
+                value = float(last_state.state)
+                # Migracja z poprzedniej wersji, gdy wartość była w groszach
+                if self._migrate_from_groszy and value > self._attr_native_max_value:
+                    value = value / 100
+                self._attr_native_value = value
             except (ValueError, TypeError):
                 self._attr_native_value = self._default
         self._apply_to_coordinator()

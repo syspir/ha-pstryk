@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.15] - 2026-04-19
+
+### Zmienione
+- Wszystkie cztery progi cenowe TGE (`Delta ceny min`, `Delta ceny max`, `Minimalna cena sprzedaży`, `Cena zawsze kupuj`) używają jednostki PLN/kWh z krokiem 0,01 (zamiast groszy z krokiem 1)
+- `Cena zawsze kupuj TGE` dopuszcza teraz wartości ujemne (zakres −1,00 … 5,00 PLN/kWh) — umożliwia reagowanie na ujemne ceny RDN
+- Sensor `tge_rdn_cena_lt_always_buy` i panel uznają próg za wyłączony tylko dla wartości 0 (wcześniej: ≤ 0)
+- Automatyczna migracja wartości zapisanych w groszach z poprzednich wersji — przy pierwszym starcie wartości większe od nowego maksimum są dzielone przez 100
+
 ## [0.9.14] - 2026-04-19
 
 ### Naprawione

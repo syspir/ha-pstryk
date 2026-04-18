@@ -606,11 +606,11 @@ class PstrykPanel extends LitElement {
             <div class="threshold-box threshold-box--buy">
               <span class="threshold-box-title">Kupuj (zawsze)</span>
               <span class="threshold-box-value">
-                ${alwaysBuyPrice > 0 ? `≤ ${alwaysBuyPrice.toFixed(2)} ${unit}` : "wyłączony"}
+                ${alwaysBuyPrice !== 0 ? `≤ ${alwaysBuyPrice.toFixed(2)} ${unit}` : "wyłączony"}
               </span>
               <span class="threshold-box-hint">
                 Cena aktualna: ${currentPrice !== null ? `${currentPrice} ${unit}` : "---"}
-                ${currentPrice !== null && alwaysBuyPrice > 0
+                ${currentPrice !== null && alwaysBuyPrice !== 0
                   ? (currentPrice <= alwaysBuyPrice ? " — KUPUJ" : "")
                   : ""}
               </span>
@@ -846,7 +846,7 @@ class PstrykPanel extends LitElement {
               const pct = ((e.price - minPrice) / (totalRange || 0.01)) * 100;
               const barPct = Math.max(1.5, pct);
               let colorClass = "chart-bar--normal";
-              const isCheap = e.price < minPrice + deltaMin || (alwaysBuyPrice > 0 && e.price <= alwaysBuyPrice);
+              const isCheap = e.price < minPrice + deltaMin || (alwaysBuyPrice !== 0 && e.price <= alwaysBuyPrice);
               const isExpensive = e.price > maxPrice - deltaMax && (minSellPrice <= 0 || e.price >= minSellPrice);
               if (e.isCurrent) colorClass = "chart-bar--current";
               else if (isCheap) colorClass = "chart-bar--cheap";
@@ -861,7 +861,7 @@ class PstrykPanel extends LitElement {
                 </div>
               `;
             })}
-            ${alwaysBuyPrice > 0 && alwaysBuyPrice >= minPrice && alwaysBuyPrice <= maxPrice ? html`
+            ${alwaysBuyPrice !== 0 && alwaysBuyPrice >= minPrice && alwaysBuyPrice <= maxPrice ? html`
               <div class="chart-threshold-line chart-threshold-line--buy"
                    style="bottom: ${((alwaysBuyPrice - minPrice) / (totalRange || 0.01)) * 100}%">
                 <span class="chart-threshold-label chart-threshold-label--buy">kupuj ≤ ${alwaysBuyPrice.toFixed(2)}</span>
