@@ -750,7 +750,7 @@ TGE_RDN_SENSORS: tuple[PstrykSensorEntityDescription, ...] = (
     PstrykSensorEntityDescription(
         key="tge_rdn_cena_lt_always_buy",
         translation_key="tge_rdn_cena_lt_always_buy",
-        name="Cena RDN — kupuj",
+        name="Cena RDN — zużywaj",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         icon="mdi:cash-check",

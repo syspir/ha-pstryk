@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.18] - 2026-04-19
+
+### Zmienione
+- Nazwa sensora `tge_rdn_cena_lt_always_buy` z „Cena RDN — kupuj" na „Cena RDN — zużywaj"
+
 ## [0.9.17] - 2026-04-19
 
 ### Zmienione
