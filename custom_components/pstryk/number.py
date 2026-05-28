@@ -1,5 +1,5 @@
 # Marcin Koźliński
-# Ostatnia modyfikacja: 2026-04-19
+# Ostatnia modyfikacja: 2026-05-28
 
 """Number entities for Pstryk Energy TGE thresholds."""
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
             name="Delta ceny min TGE",
             icon="mdi:arrow-down-circle-outline",
             native_min=0.00,
-            native_max=0.50,
+            native_max=1.00,
             native_step=0.01,
             native_unit="PLN/kWh",
             default=DEFAULT_TGE_DELTA_MIN,
@@ -68,7 +68,7 @@ async def async_setup_entry(
             name="Delta ceny max TGE",
             icon="mdi:arrow-up-circle-outline",
             native_min=0.00,
-            native_max=0.50,
+            native_max=1.00,
             native_step=0.01,
             native_unit="PLN/kWh",
             default=DEFAULT_TGE_DELTA_MAX,

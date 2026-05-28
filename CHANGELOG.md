@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.20] - 2026-05-28
+
+### Zmienione
+- Maksymalny limit suwaków „Delta ceny min TGE" i „Delta ceny max TGE" podniesiony z 0,50 do 1,00 PLN/kWh
+
 ## [0.9.19] - 2026-04-19
 
 ### Zmienione
